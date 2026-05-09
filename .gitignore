@@ -1,0 +1,47 @@
+# Entornos virtuales y dependencias
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Modelos y binarios pesados (no van al repo)
+modelos/
+bin/
+*.gguf
+*.bin
+*.safetensors
+
+# Cache de Unsloth (regenerable)
+unsloth_compiled_cache/
+
+# Datasets fuente (descargables desde HuggingFace)
+data/raw/
+data/chunks/
+data/translated/
+
+# Outputs de entrenamiento
+outputs/
+checkpoints/
+runs/
+wandb/
+
+# Logs
+*.log
+logs/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code (privado del usuario)
+.claude/settings.local.json

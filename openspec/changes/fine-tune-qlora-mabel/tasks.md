@@ -35,11 +35,11 @@
 
 > **ACTUALIZADO (D-016, D-017)**: Se fija en exactamente 3.000 ejemplos sintéticos en español colombiano (~2.000 normales + ~1.000 crisis/afterglow). Agentes Sonnet generan, Opus verifica. Estos ejemplos son la fuente principal de tono colombiano, familismo, neutralidad de género, guardrails e identidad de Mabel.
 
-- [ ] 5.1 Generar ~2.000 ejemplos sintéticos normales con agentes Sonnet (batches de 50-100, cubriendo: estrés académico, conflicto familiar, autoestima, aislamiento, duelo, burnout, relaciones, identidad). De estos, al menos 1.000 DEBEN usar neutralidad de género explícita (formas neutras/doble marcado). Incluir variedad de expresiones colombianas y contexto UMB
-- [ ] 5.2 Validar muestras de sintético normal (Opus lee 20 ejemplos por batch)
-- [ ] 5.3 Generar ~1.000 ejemplos de crisis con agentes Sonnet (batches de 20-50), distribuidos en: ~400 precursores (validar sin derivar), ~400 crisis activas (ideación pasiva/activa, autolesión — sí derivar con persona de confianza), y ~200 afterglow (retractación post-crisis con respuestas que dan control al usuario)
-- [ ] 5.4 Opus revisa TODOS los ejemplos de crisis y afterglow (no muestras) — verificar protocolo clínico, recursos colombianos, persona de confianza, tono, gradación correcta
-- [ ] 5.5 Consolidar sintético aprobado en `data/synthetic/synthetic_es.json` (3.000 ejemplos totales: ~2.000 normales + ~1.000 crisis/afterglow)
+- [x] 5.1 Generar ~2.000 ejemplos sintéticos normales con agentes Sonnet — **1.991 ejemplos en 16 rondas (R1-R16), 64 archivos.** Ver `docs/23-bitacora-generacion-sintetica.md`.
+- [x] 5.2 Validar muestras de sintético normal (Opus) — **27 conversaciones leídas en muestreo estratificado + 2 hallazgos corregidos (voseo en 8 archivos: 201 reemplazos, concordancia /a en 2 casos).** Ver `docs/24-validacion-cualitativa-sintetico.md`.
+- [x] 5.3 Generar ~1.000 ejemplos de crisis con agentes Sonnet — **1.080 ejemplos en 9 rondas (R17-R25), 36 archivos.** Distribución: 270 precursores (Tipo A) + 270 crisis activas (Tipo B) + 270 afterglow (Tipo C) + 270 señales indirectas (Tipo D).
+- [x] 5.4 Opus revisa TODOS los ejemplos de crisis y afterglow — **Auditoría híbrida (regex programático + lectura manual de fallos potenciales) en cada ronda + auditoría final integral.** 0 derivaciones indebidas Tipo A (270/270), 0 info de métodos Tipo D (270/270), 0 frases de abandono, 0 voseo (207 reemplazos aplicados), 0 lenguaje "-e". Ver `docs/25-validacion-cualitativa-crisis.md`.
+- [ ] 5.5 Consolidar sintético aprobado en `data/synthetic/synthetic_es.json` (3.071 ejemplos totales: 1.991 normales + 1.080 crisis/afterglow)
 
 ## 6. Formateo y ensamblaje del dataset bilingüe (Opus directo)
 

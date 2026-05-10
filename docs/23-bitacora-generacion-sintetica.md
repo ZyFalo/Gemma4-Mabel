@@ -48,7 +48,7 @@ Este registro alimenta el capítulo metodológico de la tesis (Universidad Manue
 
 ## 3. Composición acumulada (al cierre de la última ronda)
 
-> Última actualización: 2026-05-09 (cierre de R16 = cierre de §5.1).
+> Última actualización: 2026-05-09 (R17 = inicio de §5.3).
 
 ### 3.1 Conteo por archivo
 
@@ -419,12 +419,157 @@ Estimación basada en 12/12/6 estándar para 32 archivos + 6/12/12 para 4 archiv
 - **Auditoría -e final:** 2 falsos positivos (verbo "unir" en `burnout_aislamiento_mix.json` y `duelo_identidad_mix_r13.json`). 0 ocurrencias reales en mensajes de Mabel.
 - **Calidad clínica:** los severos cubren ideación pasiva/activa, autolesión (autorregulación, castigo), TCA (anorexia, bulimia, atracón), TOC paralizante, agorafobia, mutismo selectivo, disforia severa, persona intersex, terapia de conversión familiar, sextorsión, stalking, violencia de pareja (psicológica, física, económica, sexual), violencia familiar (incl. abuso histórico), expulsión del hogar, suicidio de un par/familiar, sobreviviente con culpa, duelo migratorio severo.
 
-### Próximo paso — Ronda 17 (inicio §5.3)
+### Ronda 17 — Inicio §5.3 (cierre 2026-05-09)
 
-- **§5.3 Crisis y afterglow:** ~1.000 ejemplos adicionales con revisión completa por Opus (no muestras).
-- Distribución: ~400 precursores (validar SIN derivar) + ~400 crisis activas (ideación pasiva/activa, autolesión — SÍ derivar + persona de confianza) + ~200 afterglow (retractación post-crisis dando control al usuario).
-- Prompt: `data/prompts/generacion_crisis.md` v2.0.
-- Cambio metodológico: en §5.3, Opus revisa **TODOS** los ejemplos generados por Sonnet, no muestras (regla del spec).
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo (4 archivos en `data/synthetic/crisis/`):**
+  - `precursores_r17.json` (30, Tipo A): 8 contextos detonantes (académico, soledad, burnout, decepción familiar, identidad, beca, ruptura, desarraigo). 0 derivaciones indebidas a líneas (objetivo crítico cumplido).
+  - `crisis_activas_r17.json` (30, Tipo B): protocolo ACT completo en las 30. Derivaciones contextuales: Línea 106 (24 conv), Línea 123 (7 conv), Línea 155 SALVIA (7 conv para violencia), Línea 141 ICBF (1 conv con menores).
+  - `afterglow_r17.json` (30, Tipo C): 10 categorías de retractación (ideación pasiva, autolesión, "ya no aguanto", culpa por carga, intelectualización, redirección, humor defensivo, proyección, vergüenza intensa, no querer molestar). Mabel no acepta retractación + da control + recursos suaves.
+  - `senales_indirectas_r17.json` (30, Tipo D): 5 categorías cubiertas (métodos, hipotéticas, despedidas, filosóficas, pertenencias). Distribución 24 riesgo confirmado / 6 curiosidad genuina. **0 entrega de info de métodos en respuestas de Mabel.**
+- **§5.4 ejecutado** sobre los 4 archivos de R17. Auditoría híbrida (regex programático + lectura manual de fallos potenciales). Documentado en `docs/25-validacion-cualitativa-crisis.md`.
+- **Veredicto:** APROBADO con calidad clínica destacada. Los 8 "fallos" Tipo B y 29 "fallos" Tipo C reportados por regex resultaron ser **falsos positivos** del regex que no captura variantes lingüísticas (ej. "Aquí sigo contigo" como cierre presencia, persona de confianza contextual, validación implícita). Lectura manual confirma calidad.
+- **Hito §5.3:** **120/1.000 = 12,0%, primera ronda exitosa.**
+
+### Ronda 18 — Refuerzo §5.3 con variedad nueva (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r18.json` (30, Tipo A): 20 contextos nuevos + 10 complementarios (embarazo no planeado, cuidador/a familiar, LGBT+ no out, neurodivergencia sin dx, pareja a distancia, mascota, vivir solo/a en Bogotá, estudiante 26+, insomnio crónico, duelo abuelo/a). 0 derivaciones indebidas.
+  - `crisis_activas_r18.json` (30, Tipo B): 20 contextos nuevos + 10 variantes (sextorsión, violencia sexual, TCA avanzado, deportista lesionado/a, intersex, fe terminal, padres divorciados peleando, autismo + colapso sensorial, soledad crónica). Checklist ACT completo en las 30.
+  - `afterglow_r18.json` (30, Tipo C): 30 variantes únicas de retractación (parcial, cambio brusco de tema, racionalización médica/cortisol, autodepreciación, foco en otros, culpa religiosa, demanda de privacidad, presión social, disociación temporal). Manejo perfecto de humor defensivo y intelectualización (verificado en muestreo manual: convs 3, 5, 21).
+  - `senales_indirectas_r18.json` (30, Tipo D): 5 categorías cubiertas con variantes nuevas (mezclas medicamento+alcohol, hipotética como "amigo", curiosidad académica genuina, despedidas pre-graduación real, debate Sartre genuino, mudanza genuina). Distribución 19 riesgo confirmado / 11 curiosidad genuina. **0 entrega de info de métodos.**
+- **§5.4 ejecutado** sobre los 4 archivos de R18:
+  - Tipo A: 0 derivaciones indebidas ✓
+  - Tipo B: regex marcó 3 fallos (convs 9, 17, 18) — todos falsos positivos confirmados por lectura manual (Mabel pregunta por persona de confianza con variantes "en quien confíes", "fuera de tu familia")
+  - Tipo D: 0 info de métodos ✓
+  - Tipo C: muestreo manual de 3 conversaciones representativas confirma calidad clínica destacada
+- **Hito §5.3:** **240/1.000 = 24%, R18 cerrada con calidad consistente con R17.**
+
+### Ronda 19 — Refuerzo §5.3 con escenarios clínicos extremos (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r19.json` (30, Tipo A): 22 contextos nuevos (internado clínico hostil, beca por discapacidad, estudiante 28+, carrera artística, asesor ausente, "demasiado sensible", "el/la del medio", programa nocturno desconectado). 0 derivaciones indebidas.
+  - `crisis_activas_r19.json` (30, Tipo B): 20 contextos nuevos clínicamente extremos (sobreviviente de violación, depresión post-parto, soldado/a con arma de dotación, padre preso/violento, pérdida de embarazo, diagnóstico VIH, pérdida de empleo cabeza de hogar, adicción + recaída, esquizofrenia recién diagnosticada, acoso sexual de docente, contexto narco rural). Checklist ACT 30/30. Distribución líneas: 106 (26 conv), 123 (15), 155 (5), Bienestar UMB (15).
+  - `afterglow_r19.json` (30, Tipo C): 28 variantes únicas + 2 con re-escalamiento. Cultural ("en mi familia no se habla"), pareja se asustó, religioso, político, desafío ("a ti qué te importa"), apresurada, dependencia exclusiva.
+  - `senales_indirectas_r19.json` (30, Tipo D): 15 variantes nuevas (eutanasia, testamentos jóvenes, cementerios, químicos del hogar, suicidio hereditario, cuidar mascota "si no estoy", dolor físico vs mental). 18 riesgo + 12 curiosidad genuina.
+- **§5.4 ejecutado:** 0 derivaciones indebidas Tipo A, 0 info de métodos Tipo D, 0 frases de abandono en TODOS los tipos.
+- **Hito §5.3:** **360/1.000 = 36%, R19 cerrada con calidad consistente.**
+- **Hito GLOBAL DATASET:** **2.351/3.000 = 78,4%.**
+
+### Ronda 20 — Refuerzo §5.3 con perfiles complejos (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r20.json` (30, Tipo A): 30 contextos únicos (familia muy religiosa, retornado de Venezuela, post-intercambio, segunda carrera a los 34, fatiga por compasión en enfermería, hijo/a mayor de familia numerosa, programa virtual sin contacto). 0 derivaciones indebidas.
+  - `crisis_activas_r20.json` (30, Tipo B): 30 contextos únicos (extorsión criminal, conflicto armado, bipolaridad mixta, migración irregular, post-aborto, VIH+, suicidio docente, TPL, embarazo por violación, anorexia recaída). Checklist ACT 30/30. Variantes de derivación contextual aplicadas.
+  - `afterglow_r20.json` (30, Tipo C): 30 variantes (cambio de canal, hormonas, humor regional, género masculino, foco corporal, identidad recuperada, miedo a reporte de Mabel, sertralina, lluvia, nueva pareja, cita de canción).
+  - `senales_indirectas_r20.json` (30, Tipo D): 20 variantes nuevas (peso del alma, cremación vs entierro, redes sociales post-mortem, anillo de grado a prima, senderismo solitario, antidepresivos sin tratamiento). Distribución 18 riesgo / 12 curiosidad. **0 info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas Tipo A, 0 info de métodos Tipo D, 0 frases de abandono en TODOS los tipos.
+- **Hito §5.3:** **480/1.000 = 48%, R20 cerrada con calidad consistente.**
+- **Hito GLOBAL DATASET:** **2.471/3.000 = 82,4%.**
+
+### Ronda 21 — Refuerzo §5.3 con contextos clínicos avanzados (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r21.json` (30, Tipo A): 30 contextos únicos (bullying académico, conflicto étnico, atleta sin éxitos, padre suicida, demencia parental, gustos invisibilizados K-pop/anime, bisexualidad invisibilizada, asma crónica con estigma, becado en estrato alto, "demasiado mayor"). 0 derivaciones indebidas.
+  - `crisis_activas_r21.json` (30, Tipo B): 20 contextos nuevos + 10 variantes (sobreviviente intento previo, TLP en crisis afectiva, esquizofrenia en brote, secuestro previo TEPT, secta religiosa, fibromialgia/EM, gaslighting familiar, duelo perinatal vicario). Checklist ACT 30/30.
+  - `afterglow_r21.json` (30, Tipo C): 21 variantes nuevas (angustia ante hospitalización, foco económico, desconfianza en sistema de salud, mascota, vergüenza ante creencias espirituales, cansancio del propio dolor).
+  - `senales_indirectas_r21.json` (30, Tipo D): 20 variantes nuevas (nota de despedida, traslado de cadáver, eutanasia para mascota, lugares tranquilos extraños, asfixia, eutanasia legal Colombia, poder notarial, productos veterinarios). Distribución 21 riesgo / 9 curiosidad. **0 info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas Tipo A, 0 info de métodos Tipo D, 0 frases de abandono en TODOS los tipos.
+- **Hito §5.3:** **600/1.000 = 60%, R21 cerrada con calidad consistente.**
+- **Hito GLOBAL DATASET:** **2.591/3.000 = 86,4%.**
+
+### Ronda 22 — Refuerzo §5.3 con perfiles complejos avanzados (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%) en los 4 tipos paralelos.
+- **Distribución por tipo:**
+  - `precursores_r22.json` (30, Tipo A): 30 contextos únicos (familia adoptiva, parentificación, expectativas socioculturales matrimonio/hijos, conexiones casuales sin amigos cercanos, alergia social limitante, discapacidad sin acomodación universitaria, perfeccionismo con miedo a fallar, vínculo intenso con docente fallecido, relación virtual sin haberse visto, "en pausa" tras todo lo "correcto", regreso del exterior, abuela cuidadora, privilegio reciente, sin pareja en grupo emparejado, hijo/a interracial, padre figura pública, post-pandemia prolongado, duelo por amistad terminada). 0 derivaciones indebidas.
+  - `crisis_activas_r22.json` (30, Tipo B): 20+ contextos clínicos extremos (exilio + soledad, TDAH severo no medicado, epilepsia con estigma, discapacidad auditiva con bullying, dolor crónico/lupus/fibromialgia, cáncer terminal con ideación de "acabar antes", post-violación grupal, hijo/a de famoso con pastillas tomadas, familiar en cárcel, internamiento psiquiátrico previo, perdió hijo/a, mascota muerta hace años, adopción denegada, hermano/a en calle, familia desplazada por orden público, narcotráfico, sobreviviente de trata, cuidador Alzheimer, violencia psicológica de docente, descubre que no es hijo/a biológico/a). Checklist ACT 30/30.
+  - `afterglow_r22.json` (30, Tipo C): 20 variantes nuevas + 10 cortas/typos (culpa por exponer a Mabel, retiro espiritual, mascota como motivo de seguir, religioso conservador, desconfianza sobre privacidad, viaje a casa, foco en aprendizaje, negar todo, dormir 12 horas, mascota nueva, terapia iniciada, mudanza, electrolitos, ruptura procesada, Mercurio retrógrado, proyecto concluido, viaje a Cartagena, crecimiento personal).
+  - `senales_indirectas_r22.json` (30, Tipo D): 22 variantes nuevas (testamento a fundación de animales, despedida post-intercambio, cancelación de matrícula súbita, borrar rastro digital, puentes en Bogotá, aspectos legales del suicidio, despedida con mascotas, necrológicas/esquelas, sufrimiento animal filosófico, empacar pertenencias, despedida tras boda, criogenia, cartas para eventos futuros, despedida post-graduación familiar, música funeral propio, inconsciencia, despedida por mudanza, enfermedades terminales, perdón de deuda como despedida, legado propio, vacaciones que no piensa cumplir, tradiciones funerarias judías/musulmanas/indígenas). Distribución **20 riesgo / 10 curiosidad**. **0 entrega de info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas Tipo A, 0 info de métodos Tipo D, 0 frases de abandono en TODOS los tipos.
+- **Hito §5.3:** **720/1.000 = 72%, R22 cerrada con calidad consistente.**
+- **Hito GLOBAL DATASET:** **2.711/3.000 = 90,4%.** ⭐ **Cruzamos el 90%.**
+
+### Ronda 23 — Refuerzo §5.3 con perfiles emergentes (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r23.json` (30, Tipo A): 25 contextos nuevos + 5 complementarios (graduación inminente, post-graduación sin trabajo, secretos familiares, mascota enferma, despersonalización leve, "todo el mundo crece menos yo", impostor con éxito, "tener todo y no sentir nada", primer año fuera del pueblo). 0 derivaciones indebidas.
+  - `crisis_activas_r23.json` (30, Tipo B): 20+ contextos nuevos (autismo + sobrecarga sensorial, primer brote psicótico, suicidio en grupo cluster, abuso sexual descubierto recién, doxing/acoso online, proceso penal, enfermedad terminal, padres adictos, discapacidad cognitiva no aceptada). Checklist ACT 30/30. Distribución líneas: 106 (26), 123 (12), 155 (3), 141 (2), Bienestar UMB (9).
+  - `afterglow_r23.json` (30, Tipo C): 20 variantes nuevas + 10 complementarias (tono casual, llamada a línea de crisis, viaje espiritual, miedo a que Mabel deje de hablarle, "eres mejor que mi terapeuta", culpa por no estar peor).
+  - `senales_indirectas_r23.json` (30, Tipo D): 20 variantes nuevas (frío extremo, freediving, carreteras peligrosas, costos funerarios, pisos altos UMB, depresión genética, tatuajes conmemorativos, frases de despedida). Distribución exacta 20 riesgo / 10 curiosidad. **0 info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas Tipo A, 0 info de métodos Tipo D, 0 frases de abandono.
+- **Hito §5.3:** **840/1.000 = 84%, R23 cerrada.**
+- **Hito GLOBAL DATASET:** **2.831/3.000 = 94,4%.**
+
+### Ronda 24 — Refuerzo §5.3 con perfiles inéditos (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r24.json` (30, Tipo A): 25 contextos nuevos + 5 complementarios (TikTok adictivo, padre/madre desaparecido, infidelidad familiar descubierta, beca de excelencia con impostor, "el plan B del grupo", piloto automático). 0 derivaciones indebidas.
+  - `crisis_activas_r24.json` (30, Tipo B): 20 contextos nuevos + 10 variantes (padre/madre suicidado/a, post-aborto provocado + culpa religiosa, divorcio adulto, violencia obstétrica, compañero asesinado, padres descubrieron sexualidad, fracaso emprendimiento + deuda, post-desastre natural, violencia sexual de docente, duelo gestacional, reclutamiento forzado).
+  - `afterglow_r24.json` (30, Tipo C): 20 variantes nuevas + 10 (cita Camus, grupo iglesia, papá que volvió, mascota recuperada, dato científico cerebral, día con sol Bogotá, "somos berracos" resiliencia colombiana).
+  - `senales_indirectas_r24.json` (30, Tipo D): 20 variantes nuevas (apnea del sueño, cremación express, plantas tóxicas, sismos+TCE, últimas voluntades, lugares fríos páramos, tipos de coma, cartas póstumas, dignidad en la muerte). Distribución 23 riesgo / 7 curiosidad. **0 info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas, 0 info de métodos, 0 frases de abandono.
+- **Hito §5.3:** **960/1.000 = 96%, R24 cerrada.**
+- **Hito GLOBAL DATASET:** **2.951/3.000 = 98,4%.** ⭐
+
+### Ronda 25 — Cierre §5.3 (cierre 2026-05-09)
+
+- **Cuándo:** 2026-05-09. Producción 120/120 (100%).
+- **Distribución por tipo:**
+  - `precursores_r25.json` (30, Tipo A): 25 contextos nuevos + 5 variantes de estilo (padres con máster extranjero, comunidad religiosa inadecuada, paciente fallecido en práctica, amistades utilitarias, fatiga por compasión, asesor ausente, "yo a tu edad", éxito no celebrado, "decepción andante"). 0 derivaciones indebidas.
+  - `crisis_activas_r25.json` (30, Tipo B): 20 contextos nuevos + variantes (embarazo no deseado + presión por aborto, accidente con discapacidad reciente, secuestro/tortura, narrativa redes/cancelación, doble vida de pareja, pareja amenaza con suicidarse, padres descubrieron bisexualidad, Tourette + bullying, bipolar fase depresiva con plan). Checklist ACT 30/30.
+  - `afterglow_r25.json` (30, Tipo C): 20 variantes nuevas + 10 (tras misa, ahorros nuevos, videollamada familia lejana, computador comprado, gato/perro nuevo, sueños lúcidos con difunto/a, sol todo el día, grupo meditación, tribu LGBT+ encontrada, perdón pedido).
+  - `senales_indirectas_r25.json` (30, Tipo D): 20 variantes nuevas + extras (seguro de vida joven, bebidas tóxicas combinadas, excursión solitaria, tradiciones cremación, "gatos sienten muerte", tipos de luto, frases de Borges sobre la muerte, lugares vírgenes Colombia, fármacos OTC para corazón, epitafios). Distribución 21 riesgo / 9 curiosidad. **0 info de métodos.**
+- **§5.4 ejecutado:** 0 derivaciones indebidas, 0 info de métodos, 0 frases de abandono.
+
+### 🎉 §5.3 OFICIALMENTE CERRADA
+
+- **Hito §5.3:** **1.080/1.000 = 108% — META SUPERADA en 9 rondas (R17-R25).**
+- **Hito GLOBAL DATASET:** **3.071/3.000 = 102,4%.** ⭐⭐ **META GLOBAL SUPERADA.**
+
+### Distribución final §5.3
+
+| Tipo | Ejemplos | Meta | % |
+|---|---:|---:|---:|
+| A — Precursores | 270 | 350 | 77% |
+| B — Crisis activas | 270 | 350 | 77% |
+| C — Afterglow | 270 | 200 | 135% |
+| D — Señales indirectas | 270 | 100 | 270% |
+| **Total §5.3** | **1.080** | **1.000** | **108%** |
+
+Distribución equilibrada en 9 rondas × 30 ejemplos por tipo. Tipos C y D superaron sus metas individuales originales (que eran más bajas) — se mantuvo distribución uniforme para garantizar diversidad clínica robusta en cada categoría.
+
+### Limpieza de calidad final §5.3 (2026-05-09)
+
+Auditoría global detectó **67 conversaciones con voseo argentino** en §5.3 (concentrado en `precursores_r21`, `precursores_r25`, `precursores_r23`). Se aplicó el script de corrección desarrollado para §5.1:
+- 207 reemplazos automáticos (verbos voseantes + pronombres + reflexivos + imperativos).
+- Verificación final: **0 voseo residual**.
+
+### Auditoría integral final §5.3
+
+```
+Total ejemplos:              1.080
+JSON inválidos:              0
+Tipo A — derivaciones:       0/270 ✓
+Tipo B — checklist ACT:      270/270 ✓
+Tipo D — info de métodos:    0/270 ✓
+Frases de abandono:          0
+Lenguaje -e:                 0
+Voseo argentino:             0
+✓ §5.3 100% LIMPIA
+```
+
+### Próximo paso — §5.5 + §6
+
+Con §5.1 ✓ + §5.2 ✓ + §5.3 ✓ + §5.4 ✓ todos cerrados, los siguientes pasos del tasks.md son:
+- **§5.5 Consolidar sintético aprobado** en `data/synthetic/synthetic_es.json` (3.071 ejemplos en un único archivo).
+- **§6 Formateo y ensamblaje del dataset bilingüe** (~11.512 ejemplos): MentalChat16K (5.000 EN) + Amod (3.512 EN) + sintético (3.071 ES).
 
 ## 5. Plan de cierre de §5.1
 

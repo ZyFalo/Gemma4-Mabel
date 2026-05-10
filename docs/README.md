@@ -41,13 +41,16 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 | [21-parametros-entrenamiento.md](21-parametros-entrenamiento.md) | Explicación detallada de los 11 parámetros de entrenamiento con justificación |
 | [23-bitacora-generacion-sintetica.md](23-bitacora-generacion-sintetica.md) | **Bitácora viva** del proceso de generación sintética (§5): rondas, temas, conteos, decisiones |
 | [24-validacion-cualitativa-sintetico.md](24-validacion-cualitativa-sintetico.md) | **§5.2 — Validación cualitativa** del sintético normal: lectura estratificada de 27 conversaciones representativas, hallazgos y veredicto |
+| [25-validacion-cualitativa-crisis.md](25-validacion-cualitativa-crisis.md) | **§5.4 — Validación cualitativa de crisis** (R17 inicial): auditoría híbrida (regex + lectura completa) de los 4 tipos A/B/C/D |
 | [decisiones/](decisiones/) | ADRs individuales para decisiones arquitectónicas mayores |
 
 ## Estado del proyecto
 
-**Fase actual**: Definición de alcance y decisiones técnicas iniciales.
+**Fase actual**: §5 dataset sintético CERRADA. Listos para §5.5 (consolidación) + §6 (formateo bilingüe).
 
-**Siguiente hito**: Validar pipeline de entrenamiento con Gemma 4 E2B sobre subset pequeño de MentalChat16K.
+**Progreso global dataset**: ✅ **3.071 / 3.000 ejemplos (102,4%)** — §5.1 cerrada (1.991 ej en 16 rondas), §5.3 cerrada (1.080 ej en 9 rondas R17-R25). 0 voseo, 0 lenguaje "-e", 0 frases de abandono, 0 info de métodos en respuestas de Mabel.
+
+**Siguiente hito**: §5.5 consolidar `synthetic_es.json` y §6 ensamblar dataset bilingüe (~11.512 ej: 5.000 MentalChat16K EN + 3.512 Amod EN + 3.071 sintético ES).
 
 ## Replicabilidad
 

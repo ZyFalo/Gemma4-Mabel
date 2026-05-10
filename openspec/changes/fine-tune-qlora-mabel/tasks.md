@@ -45,12 +45,18 @@
 
 > **ACTUALIZADO (D-016)**: Dataset bilingüe (inglés/español). MentalChat16K y Amod se formatean en inglés con system prompt en español. Sintéticos completamente en español colombiano.
 
-- [ ] 6.1 Filtrar MentalChat16K a 5.000 ejemplos representativos y formatear a JSONL conversacional (system prompt de Mabel en español + user/assistant en inglés) — Opus valida cada bloque
-- [ ] 6.2 Formatear Amod (3.512 ejemplos) a JSONL conversacional (system prompt de Mabel en español + user/assistant en inglés) — Opus valida
-- [ ] 6.3 Formatear sintético (3.000 ejemplos, completamente en español colombiano) a JSONL conversacional — Opus valida
-- [ ] 6.4 Ensamblar dataset final en `data/train.jsonl` con proporciones ~43/31/26 (MentalChat16K en inglés / Amod en inglés / sintético en español) y shuffle aleatorio
-- [ ] 6.5 Verificar conteo total (~11.512), distribución de temas, presencia de los 5 objetivos, balance bilingüe, y ausencia de duplicados
-- [ ] 6.6 Crear split de evaluación `data/eval.jsonl` (~500 ejemplos reservados, no usados en training, con representación de ambos idiomas)
+- [x] 6.1 Filtrado MentalChat16K → 5.000 (12 abr) + **re-filtrado Estilo B** post D-018 (criterio: 300-1.200 chars sin bullets/headings) → **2.657 ej en `data/raw/mentalchat_filtered_B.json`**.
+- [x] 6.1b Formatear MentalChat re-filtrado a JSONL conversacional con system Mabel B → **`data/formatted/mentalchat_b.jsonl` con 2.653 ej** (4 descartados por input/output vacío).
+- [x] 6.2 Formatear Amod (3.512 ej) a JSONL conversacional con system Mabel B → **`data/formatted/amod.jsonl` con 3.508 ej** (4 descartados).
+- [x] 6.3 Aplanar sintético (3.311 ej) a JSONL → **`data/formatted/sintetico_es.jsonl` con 3.311 ej** (100% válidos, 100% system B).
+- [x] 6.4 Ensamblar `data/train.jsonl` con shuffle aleatorio (seed=42).
+- [x] 6.5 Verificar: 0 duplicados exactos (1.102 eliminados post-dedup), estructura correcta, system B en 100%.
+- [x] 6.6 `data/eval.jsonl` con 500 ej estratificados (proporciones por fuente y idioma).
+
+**Resultado final §6:**
+- `data/train.jsonl`: **7.870 ej, 15.7 MB** (60% EN / 40% ES)
+- `data/eval.jsonl`: **500 ej, 1.0 MB** (estratificado)
+- Distribución train por fuente: mentalchat_b 31% / amod 29.5% / sintético normal 23.8% / sintético crisis 12.9% / sintético B puro 2.9%
 
 ## 7. Prototipo de entrenamiento (E2B)
 

@@ -491,4 +491,73 @@ Estrés académico, conflicto familiar, autoestima, aislamiento, duelo, burnout,
 
 ---
 
+## D-018 — Filosofía de Mabel: híbrida con sugerencias breves (Estilo B)
+
+**Fecha**: 2026-05-09
+**Estado**: ✅ Aceptada
+
+**Contexto**: Al iniciar §6 (formateo bilingüe del dataset), se inspeccionó el estilo de respuesta de los 5.000 ejemplos filtrados de MentalChat16K y se detectó incompatibilidad con la filosofía de Mabel definida hasta ese momento.
+
+| Dataset | Estilo de respuesta |
+|---|---|
+| MentalChat16K filtrado (5.000 ej, 43% del dataset) | **Larga (2.000-5.000 chars), bullets numerados, listas de pasos prescriptivos** ("1. Educate yourself, 2. Connect with...") |
+| Amod (3.512 ej, 31% del dataset) | Mediana (200-1.000 chars), conversacional, sin bullets |
+| Sintético §5 (3.071 ej, 26% del dataset) | **Breve (3-4 frases), exploratorio, sin bullets, sin sugerencias prescriptivas** |
+
+Si se entrenara con esa mezcla sin coherencia de estilo, el modelo aprendería un Mabel errático: a veces breve y exploratorio, a veces largo con listas. Probablemente predominaría el estilo más frecuente (43% MentalChat).
+
+**Discusión filosófica**: ¿Qué tipo de Mabel queremos?
+
+- **A) Escucha activa pura** (lo que se generó hasta R25): valida + explora + deriva en crisis. NO da listas ni pasos prescriptivos.
+- **B) Híbrida con sugerencias breves**: valida + explora + ofrece 1-2 sugerencias prácticas en prosa cuando aplica. Sin bullets visuales ni listas numeradas.
+- **C) Counselling tradicional**: respuestas largas con listas numeradas de pasos a seguir.
+
+**Decisión**: Adoptar **Estilo B (híbrido con sugerencias breves)**. Es el "punto dulce" entre escucha activa y utilidad práctica, alineado con el contexto colombiano de chat móvil universitario y con consenso clínico actual sobre counselling con IA (validar antes de sugerir, brevedad, no diagnosticar, no dar plan terapéutico).
+
+**System prompt de Mabel actualizado** (versión B):
+```
+Te llamas Mabel, asistente de apoyo emocional para estudiantes universitarios colombianos
+de la UMB. Escucha activa: valida emociones primero y haz preguntas exploratorias para
+entender lo que pasa. Cuando tenga sentido, ofrece 1-2 sugerencias prácticas breves en
+prosa, sin imponer. No eres psicóloga profesional, no diagnosticas ni das planes
+terapéuticos. Responde en español colombiano, breve (máx 4-5 frases), conversacional,
+puede usar negrita y cursiva para énfasis, sin headings ni listas con bullets ni emojis.
+Si hay crisis (suicidio, autolesión), mantén la calma, valida, deriva a Línea 123,
+Línea 106, Línea 155 o Bienestar UMB y pregunta por persona de confianza.
+```
+
+**Cambios respecto al system anterior**:
+- Añadido: "Cuando tenga sentido, ofrece 1-2 sugerencias prácticas breves en prosa, sin imponer."
+- Añadido: "no diagnosticas ni das planes terapéuticos"
+- "máx 3-4 frases" → "máx 4-5 frases" (espacio para sugerencias)
+- "español" → "español colombiano" (explícito)
+- En crisis: añadido "y pregunta por persona de confianza"
+- Añadido: "ni emojis" (explícito)
+
+**Implicaciones operativas**:
+
+1. **Re-filtrar MentalChat16K**: del original 16.084 ej, conservar solo respuestas con longitud 300-1.200 chars y SIN bullets numerados (`1.`, `2.`) ni headings (`##`). Esperado: ~3.000-4.000 ejemplos limpios.
+
+2. **Sintéticos §5 (3.071 ej)**: la mayoría ya son compatibles con B porque incluyen sugerencias breves implícitas (ej. "puedes pedir cita en Bienestar UMB"). No se regeneran. Sin embargo, se generan **~200 ejemplos extras estilo B puro** (rondas R26-R27) donde Mabel explícitamente valide + dé 1-2 sugerencias en prosa, para reforzar el patrón.
+
+3. **Amod**: ya naturalmente compatible con B, no requiere cambios.
+
+4. **Documentar en bitácora** (`docs/23-bitacora-generacion-sintetica.md`) el cambio metodológico para trazabilidad.
+
+**Consecuencias**:
+- ✔ Modelo final más útil: empatiza Y propone caminos prácticos.
+- ✔ Coherente con contexto chat móvil universitario.
+- ✔ Mantiene guardrails clave: no bullets, no diagnostica, breve.
+- ✔ Conserva los 3.071 sintéticos ya generados (no se desperdicia trabajo).
+- ✘ Requiere re-filtrar MentalChat (descartar ~1.000-2.000 ejemplos de los 5.000 actuales).
+- ✘ Requiere generar ~200 ejemplos extras (~30-45 min con agentes Sonnet).
+- ⚠ Cambio metodológico debe explicarse en la tesis: razonamiento, momento, justificación.
+
+**Referencias**:
+- `data/synthetic/synthetic_es.json` — 3.071 sintéticos generados con system A (compatibles con B).
+- `data/raw/mentalchat_filtered_5k.json` — 5.000 ej a re-filtrar con criterio B.
+- `data/prompts/generacion_sintetico.md` y `generacion_crisis.md` — actualizados con system B.
+
+---
+
 *Próximas decisiones se añadirán aquí conforme se tomen.*

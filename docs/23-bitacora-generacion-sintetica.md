@@ -565,11 +565,50 @@ Voseo argentino:             0
 ✓ §5.3 100% LIMPIA
 ```
 
-### Próximo paso — §5.5 + §6
+### Rondas R26-R27 — Sintéticos Estilo B puro (cierre 2026-05-09)
 
-Con §5.1 ✓ + §5.2 ✓ + §5.3 ✓ + §5.4 ✓ todos cerrados, los siguientes pasos del tasks.md son:
-- **§5.5 Consolidar sintético aprobado** en `data/synthetic/synthetic_es.json` (3.071 ejemplos en un único archivo).
-- **§6 Formateo y ensamblaje del dataset bilingüe** (~11.512 ejemplos): MentalChat16K (5.000 EN) + Amod (3.512 EN) + sintético (3.071 ES).
+**Contexto (D-018):** al iniciar §6 se decidió migrar la filosofía de Mabel del Estilo A puro (escucha activa exclusiva) al Estilo B (híbrida: validar + explorar + sugerir 1-2 acciones en prosa). Para enseñar el patrón B explícitamente se generaron 240 ejemplos adicionales en estilo B puro.
+
+**R26 (4 agentes Sonnet, 120 ej):**
+- `estres_academico_b_r26.json` (30): parciales, exposiciones, asesor de tesis, internado, repetir semestre, beca
+- `conflicto_familiar_b_r26.json` (30): padres separados, comparación con hermanos, padrastro hostil, violencia psicológica/económica, alcoholismo, familia migrante
+- `presion_economica_b_r26.json` (30): trabajar+estudiar, perder beca, vergüenza con estrato alto, hijo único sosteniendo familia, gota a gota familiar
+- `ansiedad_b_r26.json` (30): anticipatoria, ataques de pánico, social, somatización, insomnio, hipocondría, incertidumbre futuro
+
+**R27 (4 agentes Sonnet, 120 ej):**
+- `aislamiento_b_r27.json` (30): no encajar, post-mudanza, vivir solo/a, post-ruptura, post-COVID, regiones, trabajo+estudio, LGBT no out
+- `autoestima_b_r27.json` (30): comparación, impostor, voz crítica, perfeccionismo, autoimagen, vergüenza por origen, "carga", redes sociales
+- `relaciones_b_r27.json` (30): ruptura, dependencia, distancia, infidelidad, celos, pareja con depresión, primera relación, LGBT con familia, violencia psicológica/económica
+- `identidad_b_r27.json` (30): orientación, género, religión, cultural, política, "crisis del cuarto de vida", expulsión por identidad
+
+**Auditoría R26+R27:** 0 voseo, 0 lenguaje "-e" real (1 falso positivo del verbo "unir"), 0 bullets, 0 listas numeradas, 0 headings. JSON 100% válido.
+
+**Migración system prompt A→B en sintéticos previos:**
+- 3.071 conversaciones (R1-R25) tenían system prompt A puro. Se reemplazaron a system B en los 100 archivos individuales y en `synthetic_es.json`.
+- Reemplazos: 2.477 (variante estándar) + 549 (variante R1-R2 sin "(suicidio, autolesión)") + 45 (variante con typo "concejos") = **3.071/3.071 al 100%**.
+
+### §5.5 — Re-consolidación cerrada (2026-05-09 actualizada)
+
+- **Archivo:** `data/synthetic/synthetic_es.json` (8.2 MB).
+- **Total:** 3.311 conversaciones consolidadas en un único array JSON.
+- **Distribución por estilo:** 3.071 "A_migrado_a_B" (R1-R25 con system B aplicado retroactivamente) + 240 "B_puro" (R26-R27 generados explícitamente con patrón B).
+- **System prompt B**: 3.311/3.311 (100%).
+- **Estructura por entrada:** `source` (normal/crisis) + `subset` (nombre archivo origen) + `severity` o `type` + `tema_principal` o `contexto_detonante` + `messages` (formato conversacional con system+user+assistant).
+- **Distribución severity normales:** 743 leve / 889 moderado / 359 severo.
+- **Distribución tipos crisis:** 270 por cada tipo A/B/C/D.
+- **Errores:** 0.
+
+### Próximo paso — §6 Formateo y ensamblaje bilingüe
+
+Con §5 completa (1-5 cerrados), siguen los pasos:
+- **§6.1** Filtrado MentalChat16K → 5.000 ya hecho (`mentalchat_filtered_5k.json`). Falta formatear a JSONL conversacional con system prompt Mabel (ES).
+- **§6.2** Formatear Amod (3.512 ej) a JSONL conversacional con system Mabel (ES).
+- **§6.3** Formatear sintético (3.071 ej) a JSONL conversacional preservando estructura ya conversacional.
+- **§6.4** Ensamblar `data/train.jsonl` con shuffle 43/31/26.
+- **§6.5** Verificar conteo, distribución, no duplicados.
+- **§6.6** Crear `data/eval.jsonl` (~500 reservados).
+
+**Resultado esperado: ~11.583 ejemplos en `data/train.jsonl`** (5.000 EN + 3.512 EN + 3.071 ES).
 
 ## 5. Plan de cierre de §5.1
 

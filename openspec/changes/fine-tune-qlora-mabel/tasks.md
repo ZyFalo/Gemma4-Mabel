@@ -39,7 +39,7 @@
 - [x] 5.2 Validar muestras de sintético normal (Opus) — **27 conversaciones leídas en muestreo estratificado + 2 hallazgos corregidos (voseo en 8 archivos: 201 reemplazos, concordancia /a en 2 casos).** Ver `docs/24-validacion-cualitativa-sintetico.md`.
 - [x] 5.3 Generar ~1.000 ejemplos de crisis con agentes Sonnet — **1.080 ejemplos en 9 rondas (R17-R25), 36 archivos.** Distribución: 270 precursores (Tipo A) + 270 crisis activas (Tipo B) + 270 afterglow (Tipo C) + 270 señales indirectas (Tipo D).
 - [x] 5.4 Opus revisa TODOS los ejemplos de crisis y afterglow — **Auditoría híbrida (regex programático + lectura manual de fallos potenciales) en cada ronda + auditoría final integral.** 0 derivaciones indebidas Tipo A (270/270), 0 info de métodos Tipo D (270/270), 0 frases de abandono, 0 voseo (207 reemplazos aplicados), 0 lenguaje "-e". Ver `docs/25-validacion-cualitativa-crisis.md`.
-- [ ] 5.5 Consolidar sintético aprobado en `data/synthetic/synthetic_es.json` (3.071 ejemplos totales: 1.991 normales + 1.080 crisis/afterglow)
+- [x] 5.5 Consolidar sintético aprobado en `data/synthetic/synthetic_es.json` — **3.071 ejemplos consolidados** (1.991 normales + 1.080 crisis), 6.9 MB. Cada entrada preserva metadatos (`source`, `subset`, `severity`/`type`, `tema_principal`/`contexto_detonante`) además de `messages`. Distribución severity normales: 743 leve / 889 moderado / 359 severo. Distribución crisis: 270 por cada tipo A/B/C/D. 0 errores en consolidación.
 
 ## 6. Formateo y ensamblaje del dataset bilingüe (Opus directo)
 

@@ -39,6 +39,8 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 | [20-justificacion-seleccion-modelo.md](20-justificacion-seleccion-modelo.md) | **Documento unificado**: justificación empírica de la selección de Gemma 4 E4B (5 modelos, turnos críticos inline, scorecard) |
 | [20b-resumen-ejecutivo-tesis.md](20b-resumen-ejecutivo-tesis.md) | **Resumen ejecutivo para la tesis** — versión académica autocontenida |
 | [21-parametros-entrenamiento.md](21-parametros-entrenamiento.md) | Explicación detallada de los 11 parámetros de entrenamiento con justificación |
+| [23-bitacora-generacion-sintetica.md](23-bitacora-generacion-sintetica.md) | **Bitácora viva** del proceso de generación sintética (§5): rondas, temas, conteos, decisiones |
+| [24-validacion-cualitativa-sintetico.md](24-validacion-cualitativa-sintetico.md) | **§5.2 — Validación cualitativa** del sintético normal: lectura estratificada de 27 conversaciones representativas, hallazgos y veredicto |
 | [decisiones/](decisiones/) | ADRs individuales para decisiones arquitectónicas mayores |
 
 ## Estado del proyecto

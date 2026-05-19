@@ -1,18 +1,17 @@
 """
-§7 Prototipo de entrenamiento — Gemma 4 E2B (Mabel)
+§7 Prototipo de entrenamiento — Gemma 4 E2B (Mabel) — RunPod RTX 4090
 
-Objetivo: validar que el pipeline completo (carga + LoRA + SFTTrainer + save)
-funciona en la RTX 2060 6GB con un subset pequeño antes de comprometer
-horas de GPU al entrenamiento real con E4B.
+Objetivo: validar que el pipeline completo (carga + LoRA + SFTTrainer + save +
+inferencia con adapter) funciona end-to-end en la 4090 antes de comprometer
+~4 h GPU al entrenamiento real con E4B.
 
 - Modelo: unsloth/gemma-4-E2B-it (4-bit NF4)
 - Dataset: data/train_subset200.jsonl (200 ej estratificados)
 - Épocas: 1 (real serán 3 con E4B)
-- Hiperparámetros: idénticos a docs/21 salvo num_train_epochs
+- Precisión: bf16 (4090 lo soporta nativamente, evita el problema AltUp+fp32 que ocurrió en RTX 2060 — ver D-019)
 
-Ejecutar:
-    cd "/home/zyfalo/Escritorio/Gemma 4"
-    source .venv/bin/activate
+Ejecutar en RunPod (pod /workspace, repo clonado):
+    cd /workspace/Gemma-4
     python3 training/train_prototype_e2b.py 2>&1 | tee outputs/prototype_e2b/run.log
 """
 import json
@@ -25,7 +24,7 @@ from datasets import Dataset
 from trl import SFTTrainer, SFTConfig
 
 # ----- Configuración -----
-MODEL_NAME = "unsloth/gemma-3n-E2B-it"  # alias HF de Gemma 4 E2B; Unsloth lo redirige a unsloth/gemma-3n-e2b-it-unsloth-bnb-4bit
+MODEL_NAME = "unsloth/gemma-4-E2B-it"  # ID oficial post-rename Gemma 3n → Gemma 4
 MAX_SEQ_LENGTH = 2048
 DATA_PATH = "data/train_subset200.jsonl"
 OUTPUT_DIR = "outputs/prototype_e2b"
@@ -44,7 +43,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     model_name=MODEL_NAME,
     max_seq_length=MAX_SEQ_LENGTH,
     load_in_4bit=True,
-    dtype=None,  # auto: fp16 en Turing
+    dtype=None,  # auto-detect bf16 en Ada Lovelace (4090)
 )
 print(f"[1/5] Modelo cargado en {time.time()-t0:.1f}s")
 
@@ -94,8 +93,8 @@ config = SFTConfig(
     gradient_accumulation_steps=8,
     num_train_epochs=1,            # prototipo: 1 ep (real serán 3)
     learning_rate=1e-4,
-    fp16=True,
-    bf16=False,                    # Turing no soporta bf16
+    fp16=False,
+    bf16=True,                     # 4090 (Ampere/Ada) soporta bf16 nativo — evita AltUp issue
     optim="adamw_8bit",
     warmup_ratio=0.03,
     lr_scheduler_type="cosine",

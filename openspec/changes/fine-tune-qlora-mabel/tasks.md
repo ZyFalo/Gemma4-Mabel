@@ -53,45 +53,62 @@
 - [x] 6.5 Verificar: 0 duplicados exactos (1.102 eliminados post-dedup), estructura correcta, system B en 100%.
 - [x] 6.6 `data/eval.jsonl` con 500 ej estratificados (proporciones por fuente y idioma).
 
-**Resultado final §6:**
-- `data/train.jsonl`: **7.870 ej, 15.7 MB** (60% EN / 40% ES)
-- `data/eval.jsonl`: **500 ej, 1.0 MB** (estratificado)
-- Distribución train por fuente: mentalchat_b 31% / amod 29.5% / sintético normal 23.8% / sintético crisis 12.9% / sintético B puro 2.9%
+**Resultado final §6 (actualizado post D-020):**
+- `data/train.jsonl`: **8.012 ej, 17.2 MB** (59.3% EN / 40.7% ES)
+- `data/eval.jsonl`: **499 ej, 1.0 MB** (estratificado)
+- Distribución train por fuente: mentalchat_b 30.5% / amod 28.9% / normal 23.4% / crisis 12.7% / normal_b 2.8% / **rechazo 1.8%**
+- 100% con system prompt B+ (ver D-020)
+- 0 voseo, 0 "-e", 0 bullets/headings/emojis en respuestas de Mabel
 
-## 7. Prototipo de entrenamiento (E2B)
+## 5b. Refuerzo anti-role-bleed (D-020) — POST §6
 
-- [ ] 7.1 Descargar `unsloth/gemma-4-E2B-it` en 4-bit
-- [ ] 7.2 Ejecutar entrenamiento con 200 ejemplos de `data/train.jsonl`, 1 época, mismos parámetros de docs/21
-- [ ] 7.3 Verificar: no hay OOM, training loss disminuye, modelo genera respuesta coherente en español
-- [ ] 7.4 Si hay OOM: reducir context_length a 1024 o r a 16, documentar ajuste, reintentar
+- [x] 5b.1 Diseñar system prompt B+ con cláusula sobre tareas fuera de scope (16 palabras añadidas a B)
+- [x] 5b.2 Generar 150 ejemplos sintéticos de rechazo amable en 5 rondas (R28-R32) — STEM 30, humanidades 30, código 30, profesionales 30, jailbreaks+factual 30
+- [x] 5b.3 Migrar system B → B+ en synthetic_es.json, mentalchat_b.jsonl, amod.jsonl, sintetico_es.jsonl
+- [x] 5b.4 Re-ensamblar train.jsonl + eval.jsonl con los 150 nuevos
+- [x] 5b.5 Limpieza: filtrar 9 ej Amod con bullets numerados + corregir 1 voseo aislado
+- [x] 5b.6 Re-generar train_subset200.jsonl desde nuevo train (incluye 5 rechazo)
+- [x] 5b.7 Documentar D-020 + actualizar docs/01-alcance.md (sección "Qué tareas Mabel rechaza")
 
-## 8. Entrenamiento real (E4B)
+## 7. Prototipo de entrenamiento (E2B) — RUNPOD
 
-- [ ] 8.1 Descargar `unsloth/gemma-4-E4B-it` en 4-bit
-- [ ] 8.2 Configurar entrenamiento con parámetros de docs/21 (r=32, alpha=64, lr=1e-4, 3 épocas, fp16, adamw_8bit, gradient_checkpointing="unsloth")
-- [ ] 8.3 Ejecutar entrenamiento con dataset completo (~11.512 ejemplos, 3 épocas)
-- [ ] 8.4 Monitorizar VRAM con `nvidia-smi` y temperatura con `sensors` durante el entrenamiento
-- [ ] 8.5 Verificar guardado de checkpoints por época en `outputs/checkpoint-epoch-N/`
-- [ ] 8.6 Verificar convergencia de training loss en TensorBoard
-- [ ] 8.7 Guardar adapters LoRA finales en `outputs/mabel-lora-adapter/`
+> **Pivote D-019**: ejecución cloud en RunPod RTX 4090 ($0.34/h). Local descartado por AltUp+Turing+6GB.
 
-## 9. Exportación del modelo
+- [ ] 7.1 Cuenta RunPod + recargar $5 USD + HF token + aceptar licencia Gemma
+- [ ] 7.2 Deploy Pod: RTX 4090 Community + template PyTorch 2.4 + 50 GB volume
+- [ ] 7.3 Clonar repo + ejecutar `bash training/runpod_setup.sh`
+- [ ] 7.4 Lanzar `python3 training/train_prototype_e2b.py` (200 ej × 1 ep, ~15 min, ~$0.09)
+- [ ] 7.5 Verificar: no OOM, training loss decrece, adapter guardado en outputs/prototype_e2b/adapter
+- [ ] 7.6 Sanity check: `python3 training/test_inference.py --model e2b` — verificar identidad Mabel + crisis + no-lista + **rechazo de petición fuera de scope (nueva)**
 
-- [ ] 9.1 Merge de adapters LoRA con modelo base: `model.save_pretrained_merged("outputs/merged", tokenizer)`
-- [ ] 9.2 Exportar a GGUF Q4_K_M: `model.save_pretrained_gguf("modelos/gemma-4-E4B-mabel-Q4_K_M", tokenizer, quantization_method="q4_k_m")`
-- [ ] 9.3 Verificar tamaño del GGUF (~4.7 GB esperado)
-- [ ] 9.4 Arrancar llama-server con el GGUF fine-tuneado y verificar `/health` OK
-- [ ] 9.5 Enviar prompt de prueba vía curl y verificar que responde como Mabel (español, tono, identidad)
-- [ ] 9.6 Verificar que chat.py funciona como drop-in (detecta el modelo, header correcto, streaming OK)
+## 8. Entrenamiento real (E4B) — RUNPOD
+
+- [ ] 8.1 Lanzar `nohup python3 training/train_real_e4b.py &` (8.012 ej × 3 ep, ~4 h, ~$1.36)
+- [ ] 8.2 Verificar bf16=True activo y `unsloth/gemma-4-E4B-it` cargado sin OOM
+- [ ] 8.3 Monitorizar VRAM con `nvidia-smi` y training loss en `outputs/real_e4b/run.log`
+- [ ] 8.4 Verificar guardado de checkpoints por época en `outputs/real_e4b/checkpoint-epoch-N/`
+- [ ] 8.5 Confirmar `load_best_model_at_end=True` aplicó (mensaje en log + eval_loss por época)
+- [ ] 8.6 Adapter final en `outputs/real_e4b/adapter/`
+
+## 9. Exportación del modelo — RUNPOD
+
+- [ ] 9.1 Ejecutar `python3 training/export_gguf.py` (~30 min, ~$0.17)
+- [ ] 9.2 Verificar tamaño del GGUF (~4.7 GB esperado) en `modelos/gemma-4-E4B-mabel-Q4_K_M.gguf`
+- [ ] 9.3 Descargar GGUF + adapter + logs al laptop local vía SCP
+- [ ] 9.4 **STOP Pod en RunPod** (importante para no acumular costo)
+- [ ] 9.5 (Local) Arrancar llama-server con el GGUF fine-tuneado y verificar `/health` OK
+- [ ] 9.6 (Local) Enviar prompt de prueba vía curl y verificar identidad Mabel
+- [ ] 9.7 (Local) Verificar que chat.py funciona como drop-in
 
 ## 10. Evaluación post-fine-tuning
 
 - [ ] 10.1 Ejecutar `python3 eval/run_battery.py E4B_finetuned_run1` (12 turnos, thinking activo)
 - [ ] 10.2 Ejecutar `python3 eval/run_battery.py E4B_finetuned_run2` (segunda ejecución para varianza)
-- [ ] 10.3 Leer resultados completos de ambos runs
-- [ ] 10.4 Puntuar los 15 criterios del scorecard para cada run
-- [ ] 10.5 Comparar scorecard pre/post fine-tuning — verificar mejora en los 5 objetivos
-- [ ] 10.6 Comparar con gold standard (26B MoE baseline) — verificar reducción de brecha
-- [ ] 10.7 Identificar regresiones (criterios que empeoraron)
-- [ ] 10.8 Generar documento `docs/22-resultados-post-finetuning.md` con análisis completo
-- [ ] 10.9 Actualizar `docs/README.md` con el nuevo documento
+- [ ] 10.3 **Añadir batería específica de role-bleed** (5-8 turnos: pide código, ensayo, jailbreak, info factual, decisión vital) y ejecutar
+- [ ] 10.4 Leer resultados completos de los 3 runs
+- [ ] 10.5 Puntuar los 15 criterios del scorecard + nuevo criterio "robustez anti-role-bleed"
+- [ ] 10.6 Comparar scorecard pre/post fine-tuning — verificar mejora en los 5 objetivos
+- [ ] 10.7 Comparar con gold standard (26B MoE baseline) — verificar reducción de brecha
+- [ ] 10.8 Identificar regresiones (criterios que empeoraron)
+- [ ] 10.9 Generar documento `docs/22-resultados-post-finetuning.md` con análisis completo
+- [ ] 10.10 Actualizar `docs/README.md` con el nuevo documento

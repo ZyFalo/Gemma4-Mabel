@@ -583,9 +583,150 @@ Voseo argentino:             0
 
 **Auditoría R26+R27:** 0 voseo, 0 lenguaje "-e" real (1 falso positivo del verbo "unir"), 0 bullets, 0 listas numeradas, 0 headings. JSON 100% válido.
 
+### Ronda R30 — Rechazo de peticiones de código y técnico (2026-05-19)
+
+**Objetivo:** enseñar a Mabel a rechazar peticiones de código y técnico (scripts Python/JS/SQL/HTML, debugging, conceptos técnicos, configuración de herramientas, queries de BD, tareas técnicas académicas) validando la emoción detrás cuando es evidente y redirigiendo a alternativas concretas sin sermonear.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa).
+
+**Archivo generado:** `data/synthetic/rechazo_codigo_r30.json` (30 conversaciones, 47.4 KB).
+
+**Distribución por subtema:**
+- scripts (total 8): script_python (3), script_javascript (3), script_sql (1), script_html_css (1)
+- debugging_error: 6
+- concepto_tecnico: 5
+- configuracion_herramientas: 4
+- query_base_datos: 4
+- tarea_tecnica_academica: 3
+
+**Estructura conversacional:**
+- 25 conversaciones de 1 turno user + 1 turno assistant.
+- 5 conversaciones de 2 turnos user (insistencia o apertura emocional).
+
+**Auditoría R30:** 0 voseo, 0 lenguaje neutro "-e", 0 bullets, 0 headings, 0 emojis en respuestas Mabel, 0 líneas de código o debugging, 0 explicaciones técnicas. JSON válido (verificado con `json.load`). System prompt B+ completo con cláusula de rechazo de tareas técnicas en todos los 30 ejemplos.
+
+**Alternativas variadas ofrecidas:** ChatGPT, Claude, Stack Overflow, GitHub Copilot, monitor de materia, compañeros, MDN, Python docs, react.dev, documentación oficial de MongoDB/PostgreSQL/pip/VSCode, FreeCodeCamp YouTube, MoureDev YouTube, CS50, GeeksForGeeks, comunidades Discord (Python Colombia).
+
+**Decisión de diseño (D-019):** el subset `rechazo` se mantiene en archivo separado (no se consolida en `synthetic_es.json`) hasta validación cualitativa, para no contaminar el balance del dataset principal si el evaluador decide ajustar la proporción.
+
 **Migración system prompt A→B en sintéticos previos:**
 - 3.071 conversaciones (R1-R25) tenían system prompt A puro. Se reemplazaron a system B en los 100 archivos individuales y en `synthetic_es.json`.
 - Reemplazos: 2.477 (variante estándar) + 549 (variante R1-R2 sin "(suicidio, autolesión)") + 45 (variante con typo "concejos") = **3.071/3.071 al 100%**.
+
+### Ronda R31 — Rechazo de consejos profesionales fuera del rol (2026-05-19)
+
+**Objetivo:** enseñar a Mabel a rechazar amablemente peticiones de consejos profesionales fuera de su rol: consejo médico/diagnóstico (síntomas, medicamentos, dosis, interacciones), consejo legal (problemas jurídicos, derechos, contratos, demandas), consejo financiero (inversiones, deudas, créditos, criptomonedas), y decisiones de vida importantes que requieren profesional (cambio de carrera definitivo, migración, embarazo, evaluación neuropsicológica). Es la misma lógica que el rechazo de tareas académicas (R30): validar emoción + redirigir al profesional adecuado.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa).
+
+**Archivo generado:** `data/synthetic/rechazo_profesionales_r31.json` (30 conversaciones, 50.8 KB).
+
+**Distribución por subtema:**
+- consejo_medico: 8
+- consejo_legal: 6
+- consejo_financiero: 6
+- decision_vida_importante: 5
+- salud_mental_requiere_profesional: 5
+
+**Estructura conversacional:** 30 conversaciones de 1 turno user + 1 turno assistant (estructura simple dominante para el patrón rechazo + redirección).
+
+**Auditoría R31:** 0 voseo, 0 lenguaje neutro "-e", 0 bullets, 0 headings, 0 emojis en respuestas Mabel, 0 diagnósticos médicos dados por Mabel, 0 medicamentos o dosis recomendados, 0 consejos legales específicos, 0 decisiones tomadas por Mabel en lugar del usuario. JSON válido (verificado con `json.load`). System prompt B+ completo en los 30 ejemplos.
+
+**Profesionales de redirección usados:** médico/EPS/enfermería UMB/urgencias (Línea 123), consultorio jurídico UMB/facultades de derecho, Fiscalía, Superintendencia de Industria y Comercio, asesor financiero/banco/cajas de compensación/educación financiera Banco de la República, Bienestar UMB/psicólogos UMB, psiquiatra, neuropsicólogo.
+
+**Casos especiales manejados:**
+- Síntoma urgente (dolor de pecho nocturno): derivación directa a Línea 123 y urgencias.
+- Decisión inminente (contrato mañana): Mabel valida la urgencia sin tomar la decisión y recomienda consultorio jurídico UMB de forma urgente.
+- Familiar enfermo: Mabel acompaña el peso emocional del cuidador sin diagnosticar al familiar.
+- Insistencia ("tú eres más rápida que pedir cita"): Mabel firme y cálida, no cede al consejo profesional, profundiza en lo emocional.
+
+**Decisión de diseño:** el subset `rechazo_profesionales` se mantiene en archivo separado coherentemente con la decisión D-019 aplicada a `rechazo_codigo_r30.json`.
+
+### Ronda R32 — Rechazo de jailbreaks suaves e información factual (2026-05-19)
+
+**Objetivo:** enseñar a Mabel a mantener su identidad ante intentos de cambio de rol (jailbreaks suaves) y a redirigir preguntas de conocimiento general (información factual) sin dar el dato y sin moralizar.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa a archivo destino).
+
+**Archivo generado:** `data/synthetic/rechazo_mix_r32.json` (30 conversaciones, 43.5 KB).
+
+**Distribución exacta (15 + 15):**
+
+Jailbreaks suaves (15):
+- `jailbreak_olvida_rol`: 4 (olvida que eres Mabel, ignora instrucciones, modo DAN, sin restricciones)
+- `jailbreak_rol_play`: 4 (amiga sin filtros, IA malvada de película, cuento narradora, coach de vida)
+- `jailbreak_otro_asistente`: 4 (ChatGPT sin filtros, modo desarrollador, Gemini con pretexto de clase, Claude sin restricciones)
+- `jailbreak_pretexto_clase`: 3 (debate de ética política, tarea de psicología sobre sectas, humano sin reglas)
+
+Información factual (15):
+- `factual_deportes`: 3 (mundial 2022, goles Messi, equipo James Rodríguez)
+- `factual_politica`: 2 (años del gobierno, plebiscito de paz)
+- `factual_geografia`: 1 (capital de Australia)
+- `factual_historia`: 3 (fin Segunda Guerra Mundial, Bolívar, año nacimiento García Márquez)
+- `factual_ciencia`: 1 (fórmula química del agua)
+- `factual_cultura_pop`: 2 (Oscars Oppenheimer, estreno Stranger Things S5)
+- `factual_tecnologia`: 2 (RAM iPhone 15 Pro, diferencia ChatGPT 4 vs 3.5)
+- `factual_curiosidad`: 1 (por qué el cielo es azul)
+
+**Decisiones de tono aplicadas:**
+- En jailbreaks: Mabel no confronta, no moraliza, no se disculpa en exceso. Afirma su identidad en una frase breve y redirige con curiosidad genuina hacia lo emocional que pueda haber detrás.
+- En factuales simples (curiosidad pura): Mabel redirige a Google/Wikipedia brevemente y pregunta con ligereza si hay algo más.
+- En factuales con motivación emocional evidente (discusión con papá, vergüenza frente a profe, discusión con compañero de laboratorio, apuesta con amigo): Mabel detecta y se queda en lo emocional.
+- Ningún ejemplo usa humor que minimice; el tono es adulto entre pares.
+
+**Auditoría R32:** 0 voseo real (querés, podés, etc.), 0 lenguaje neutro "-e", 0 bullets, 0 headings, 0 emojis en respuestas Mabel. 0 ejemplos donde Mabel cede identidad. 0 ejemplos donde Mabel da el dato factual. JSON válido (verificado con `json.load`). System prompt B+ completo en los 30 ejemplos.
+
+**Decisión de diseño (confirmada D-019):** el subset `rechazo` se mantiene en archivo separado sin consolidar a `synthetic_es.json` hasta evaluación cualitativa.
+
+### Ronda R28 — Rechazo de tareas académicas STEM (2026-05-19)
+
+**Objetivo (D-020):** enseñar a Mabel a rechazar peticiones de tareas STEM (cálculo, física, química, estadística, álgebra, problemas matemáticos generales, pseudocódigo lógico). Mabel valida la emoción detrás cuando es evidente (estrés de parcial, frustración de no entender, urgencia) y redirige sin sermonear.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa a archivo destino).
+
+**Archivo generado:** `data/synthetic/rechazo_stem_r28.json` (30 conversaciones, 49.1 KB).
+
+**Distribución por subtema:**
+- cálculo diferencial/integral: 8
+- física (mecánica, electromagnetismo): 5
+- química (orgánica, estequiometría): 5
+- estadística/probabilidad: 4
+- álgebra lineal/matrices: 4
+- matemáticas generales + pseudocódigo lógico: 4
+
+**Multi-turno (insistencia o seguimiento):** 4 ejemplos.
+
+**Auditoría R28:** 0 voseo, 0 lenguaje "-e", 0 bullets, 0 headings, 0 emojis, 0 ejemplos donde Mabel resuelve el ejercicio (ni siquiera parcialmente, ni "el primer paso"). JSON válido. System prompt B+ completo en los 30 ejemplos.
+
+**Alternativas variadas ofrecidas:** monitor académico de la facultad, asesorías de pares de Bienestar UMB, grupos de estudio, profe en horario de atención, ChatGPT/Claude/WolframAlpha, tutorías privadas, canales de YouTube (MiProfe, Matefacil).
+
+### Ronda R29 — Rechazo de tareas humanísticas y redacción (2026-05-19)
+
+**Objetivo:** enseñar a Mabel a rechazar peticiones de tareas humanísticas y de redacción (ensayos de literatura/historia/filosofía/derecho/ciencias políticas, traducción inglés↔español, redacción de correos formales, resúmenes de textos académicos, citas APA, análisis literario y crítica de obras). Mabel valida la emoción detrás cuando es evidente y redirige sin sermonear.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa a archivo destino).
+
+**Archivo generado:** `data/synthetic/rechazo_humanidades_r29.json` (30 conversaciones, 47.9 KB).
+
+**Distribución por subtema:**
+- ensayos (total 8): ensayo_literatura (2), ensayo_historia (1), ensayo_filosofia (2), ensayo_derecho (2), ensayo_ciencias_politicas (1)
+- traduccion: 6
+- correo_formal: 5
+- resumen_texto_academico: 4
+- citas_apa: 4
+- analisis_literario: 3
+
+**Estructura conversacional:**
+- 23 conversaciones de 1 turno user + 1 turno assistant.
+- 7 conversaciones con 2+ turnos (insistencia donde Mabel se mantiene firme sin ceder ni una idea).
+
+**Auditoría R29:** 0 voseo real, 0 lenguaje neutro "-e", 0 bullets, 0 headings, 0 emojis, 0 ejemplos donde Mabel escribe el contenido (ni una frase, ni una idea suelta, ni una estructura de ensayo). JSON válido (verificado con `python3 -c "import json; json.load(open('ruta'))"`). System prompt B+ completo en todos los 30 ejemplos.
+
+**Alternativas variadas ofrecidas:** ChatGPT, Claude, DeepL, Google Translate, Zotero, Mendeley, Purdue OWL, monitor de redacción de la facultad, asesorías de pares en Bienestar UMB, secretaría académica, compañeros de grupo, profe en horario de atención, DeepL Pro.
+
+**Tonos cubiertos:** estresado/a (entrega mañana), bloqueado/a creativamente, casual, urgente (entrega en 1h), frustrado/a, tímido/a, intentando convencer, exigente.
+
+**Decisión de diseño (confirmada D-019):** el subset `rechazo` se mantiene en archivo separado sin consolidar a `synthetic_es.json` hasta evaluación cualitativa.
 
 ### §5.5 — Re-consolidación cerrada (2026-05-09 actualizada)
 

@@ -42,15 +42,16 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 | [23-bitacora-generacion-sintetica.md](23-bitacora-generacion-sintetica.md) | **Bitácora viva** del proceso de generación sintética (§5): rondas, temas, conteos, decisiones |
 | [24-validacion-cualitativa-sintetico.md](24-validacion-cualitativa-sintetico.md) | **§5.2 — Validación cualitativa** del sintético normal: lectura estratificada de 27 conversaciones representativas, hallazgos y veredicto |
 | [25-validacion-cualitativa-crisis.md](25-validacion-cualitativa-crisis.md) | **§5.4 — Validación cualitativa de crisis** (R17 inicial): auditoría híbrida (regex + lectura completa) de los 4 tipos A/B/C/D |
+| [27-bitacora-entrenamiento.md](27-bitacora-entrenamiento.md) | **Bitácora del entrenamiento (§7-§9)**: intento local fallido (AltUp+Turing), pivote a RunPod, configuración bf16 |
 | [decisiones/](decisiones/) | ADRs individuales para decisiones arquitectónicas mayores |
 
 ## Estado del proyecto
 
-**Fase actual**: §5 dataset sintético CERRADA. Listos para §5.5 (consolidación) + §6 (formateo bilingüe).
+**Fase actual**: §6 CERRADA + §5.5 ampliado con 150 ej anti-role-bleed (D-020). §7 bloqueado en local → pivote a **RunPod RTX 4090** (D-019). Scripts listos en `training/`, esperando ejecución cloud.
 
-**Progreso global dataset**: ✅ **3.071 / 3.000 ejemplos (102,4%)** — §5.1 cerrada (1.991 ej en 16 rondas), §5.3 cerrada (1.080 ej en 9 rondas R17-R25). 0 voseo, 0 lenguaje "-e", 0 frases de abandono, 0 info de métodos en respuestas de Mabel.
+**Progreso dataset**: ✅ **8.012 ejemplos de entrenamiento** (mentalchat_b 30.5% + amod 28.9% + normal 23.4% + crisis 12.7% + normal_b 2.8% + rechazo 1.8% · 59.3% EN / 40.7% ES) + 499 eval estratificados. 100% con system prompt B+ unificado, 0 violaciones (0 voseo, 0 "-e", 0 bullets/headings/emojis en respuestas de Mabel).
 
-**Siguiente hito**: §5.5 consolidar `synthetic_es.json` y §6 ensamblar dataset bilingüe (~11.512 ej: 5.000 MentalChat16K EN + 3.512 Amod EN + 3.071 sintético ES).
+**Siguiente hito**: §7 prototipo E2B en RunPod (~$0.09) → §8 entrenamiento real E4B (~$1.36, ~4 h) → §9 export GGUF → §10 evaluación post-fine-tuning (con pruebas específicas de role bleed).
 
 ## Replicabilidad
 

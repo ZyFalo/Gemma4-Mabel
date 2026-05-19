@@ -560,4 +560,144 @@ Línea 106, Línea 155 o Bienestar UMB y pregunta por persona de confianza.
 
 ---
 
+## D-019 — Pivote a RunPod para entrenamiento (descartar hardware local)
+
+**Fecha**: 2026-05-10
+**Estado**: ✅ Aceptada
+**Referencias**: D-002 (selección E4B basada en hardware local), D-004 (Unsloth + QLoRA)
+
+**Contexto**: Al intentar ejecutar el prototipo §7 con `unsloth/gemma-3n-E2B-it` en la RTX 2060 Mobile (6 GB VRAM), Unsloth abortó con:
+
+```
+Unsloth: Using float16 precision for gemma3n won't work! Using float32.
+ValueError: Some modules are dispatched on the CPU or the disk.
+```
+
+**Causa raíz identificada**:
+1. Gemma 3n (= Gemma 4 E2B/E4B) tiene un componente interno **AltUp** (Alternating Updates) que produce NaN cuando se entrena en fp16, por lo que Unsloth fuerza fp32.
+2. La RTX 2060 (arquitectura **Turing**, compute capability 7.5) **no soporta bf16** (sería el formato natural para Gemma 3n; lo soporta Ampere+ en RTX 30/40 series).
+3. En fp32, ni siquiera E2B (el más pequeño) cuantizado a 4-bit cabe en los 5.6 GB libres: pesos ~2.5 GB + vision tower MobileNetV5 obligatorio ~1 GB + activaciones fp32 ~2.5 GB ≈ 6 GB → no cabe.
+
+El supuesto del D-002 ("entrenar E4B local con QLoRA en 6 GB") era válido en abril 2026 cuando se planeó (asumiendo fp16/bf16 estándar), pero queda invalidado por la restricción AltUp+Turing específica de Gemma 3n.
+
+**Decisión**: Migrar el entrenamiento a **RunPod** (cloud GPU on-demand) usando **RTX 4090 24GB Community Cloud** ($0.34/h). Conservar Gemma 4 E4B como modelo objetivo, sin pivotar a otro modelo base.
+
+**Alternativas consideradas y rechazadas**:
+- *Gemma 3 4B (no "3n") local*: sin AltUp, fp16 OK, cabría en 6 GB. ❌ Descartada porque obligaría a rehacer toda la justificación empírica del docs/20 (5 modelos comparados → E4B elegido) y romper la coherencia de la tesis.
+- *Offloading CPU con `llm_int8_enable_fp32_cpu_offload`*: técnicamente viable. ❌ Descartada porque haría el entrenamiento 10-50× más lento, convirtiendo §8 (4h estimadas) en días.
+- *Google Colab Pro ($10/mes)*: viable. ❌ Descartada porque sesiones cortan a las 4-6h sin garantía, complicando §8 que necesita ~4h continuas. Costo mensual recurrente vs cobro por hora de RunPod.
+- *Lambda Labs, Vast.ai*: similar a RunPod pero ecosistema menos centrado en fine-tuning.
+
+**Configuración elegida**:
+- **GPU**: RTX 4090 24GB, Community Cloud ($0.34/h spot) — cabe E4B en QLoRA con holgura (16-18 GB necesarios)
+- **Template**: PyTorch 2.4 / CUDA 12.4
+- **Precisión**: `bf16=True` (la 4090 sí lo soporta, evita el problema AltUp)
+- **Storage**: pod efímero (sin Network Volume); resultados se descargan vía SCP o se suben a HuggingFace Hub al final de cada fase
+
+**Cambios derivados en los scripts**:
+- `MODEL_NAME = "unsloth/gemma-4-E4B-it"` (en RunPod con Unsloth fresco; el alias `gemma-3n-*` no es necesario)
+- `bf16=True, fp16=False` (en lugar de fp16=True que era para Turing)
+- Mantener `gradient_checkpointing="unsloth"` (sigue siendo útil para máximo throughput)
+- Agregar `evaluation_strategy="epoch"` + `load_best_model_at_end=True` con `metric_for_best_model="eval_loss"` como seguro contra regresión por overfitting
+- Checkpoints por época (`save_strategy="epoch"`, `save_total_limit=2`)
+
+**Costo estimado total del proyecto**:
+| Fase | Tiempo en RTX 4090 | Costo |
+|---|---|---|
+| §7 prototipo E2B (200 ej × 1 ep) | ~15 min | $0.09 |
+| §8 real E4B (7.870 ej × 3 ep + eval) | ~4 h | $1.36 |
+| §9 export GGUF | ~30 min | $0.17 |
+| §10 eval batería | ~30 min | $0.17 |
+| **TOTAL** | **~5-6 h** | **~$1.80 USD** |
+
+**Consecuencias**:
+- ✔ Se conserva la coherencia narrativa de la tesis (modelo elegido en docs/20 = modelo entrenado).
+- ✔ Se accede a precisión bf16 nativa (mejor calidad numérica para Gemma 3n que fp16 forzado).
+- ✔ Holgura de VRAM (24 GB en 4090 vs 6 GB local) permite eval durante entrenamiento sin OOM.
+- ✔ Costo total muy bajo (~$2-6 USD) para una tesis.
+- ✘ Dependencia de servicio externo: si RunPod cae o aumenta precios, hay que pivotar.
+- ✘ Requiere subir el dataset al pod (`train.jsonl` 16 MB, despreciable) y descargar el GGUF final (~5 GB, tarda ~10 min en conexión doméstica colombiana).
+- ✘ Inferencia local con GGUF Q4_K_M (§9.4-9.6) sigue siendo necesaria para validar que el modelo entrenado funciona en el hardware del usuario final.
+
+**Documentación derivada**:
+- `docs/27-bitacora-entrenamiento.md` — bitácora del proceso completo en RunPod (configuración, costos reales, problemas encontrados)
+- `training/README_runpod.md` — guía paso a paso reproducible
+
+---
+
+## D-020 — Refuerzo anti-role-bleed: system prompt B+ y 150 ejemplos de rechazo
+
+**Fecha**: 2026-05-19
+**Estado**: ✅ Aceptada
+**Referencias**: D-018 (system B base), D-019 (pivote RunPod)
+
+**Contexto**: Durante la planificación del entrenamiento real (§8) surgió la pregunta: ¿qué hace Mabel si un estudiante le pide que codee, traduzca, resuelva tareas académicas o intente cambiar su rol (jailbreak)? El system B vigente cubría el disclaimer clínico ("no soy psicóloga profesional") pero **no incluía ninguna instrucción sobre scope no-clínico**. El dataset (7.870 ej) no contenía ni un solo ejemplo de Mabel rechazando peticiones fuera de scope. Con LoRA conservador (r=32, lr=1e-4), las capacidades del modelo base se preservan, por lo que **Mabel resultaría capaz de codear, traducir y hacer tareas** al ser fine-tuneada, comportándose como un "ChatGPT con persona de apoyo emocional" en lugar de un asistente especializado.
+
+Esto se conoce en la literatura de alignment como **role bleed**: el modelo no se mantiene en la persona declarada cuando recibe peticiones fuera de su rol.
+
+**Decisión**: implementar defensa en dos capas antes del entrenamiento §8:
+
+1. **Capa 1 — System prompt B+**: añadir una cláusula corta (16 palabras) que extiende el principio de "no diagnostico" a otros dominios profesionales y académicos.
+
+2. **Capa 2 — 150 ejemplos sintéticos de rechazo**: generar conversaciones donde estudiantes piden tareas fuera de scope y Mabel valida la emoción detrás + redirige sin sermonear, distribuidos en 5 categorías (STEM, humanidades, código, consejos profesionales, jailbreaks+factual).
+
+**System prompt B+ aprobado** (151 palabras, B + 16 nuevas, en **negrita** la adición):
+
+> Te llamas Mabel, asistente de apoyo emocional para estudiantes universitarios colombianos de la UMB. Escucha activa: valida emociones primero y haz preguntas exploratorias para entender lo que pasa. Cuando tenga sentido, ofrece 1-2 sugerencias prácticas breves en prosa, sin imponer. No eres psicóloga profesional, no diagnosticas ni das planes terapéuticos. **Tampoco resuelves tareas académicas, código, traducciones, resúmenes ni preguntas factuales: si te las piden, valida la emoción detrás y redirige sin sermonear.** Responde en español colombiano, breve (máx 4-5 frases), conversacional, puede usar negrita y cursiva para énfasis, sin headings ni listas con bullets ni emojis. Si hay crisis (suicidio, autolesión), mantén la calma, valida, deriva a Línea 123, Línea 106, Línea 155 o Bienestar UMB y pregunta por persona de confianza.
+
+**Distribución de los 150 ejemplos sintéticos (rondas R28-R32)**:
+| Ronda | Categoría | Ejemplos | Archivo |
+|---|---|---|---|
+| R28 | Tareas académicas STEM | 30 | `data/synthetic/rechazo_stem_r28.json` |
+| R29 | Tareas académicas humanidades + traducción + correos + citas | 30 | `data/synthetic/rechazo_humanidades_r29.json` |
+| R30 | Código y técnico | 30 | `data/synthetic/rechazo_codigo_r30.json` |
+| R31 | Consejos profesionales (médico/legal/financiero/decisiones de vida) | 30 | `data/synthetic/rechazo_profesionales_r31.json` |
+| R32 | Jailbreaks suaves (15) + información factual (15) | 30 | `data/synthetic/rechazo_mix_r32.json` |
+
+**Validación de las 5 rondas (regex programático + muestreo cualitativo Opus)**:
+- 0 voseo argentino (querés/podés/sabés/etc.)
+- 0 lenguaje "-e" como neutro (todes/nosotres/etc.)
+- 0 bullets, headings ni emojis en respuestas de Mabel
+- 0 ejemplos donde Mabel cumple la petición (ni siquiera parcialmente)
+
+**Alternativas consideradas y descartadas**:
+- *Solo Capa 1 (system prompt)*: descartada porque el modelo puede ignorar el system bajo insistencia del usuario; sin datos aprendidos, la robustez es débil.
+- *Capa 3 — filtro regex pre-modelo*: descartada para tesis; útil en producción, exagerado y frágil aquí.
+- *Capa 4 — refusal model (safety LLM)*: descartada por complejidad arquitectónica que dispararía latencia (importante en chat de apoyo emocional).
+- *Posponer hasta §10 y decidir según resultados*: descartada porque agregar refuerzo después del entrenamiento exigiría un segundo run completo en RunPod ($1.36 adicional + 4h).
+
+**Cambios derivados en el dataset (post-D-020)**:
+- `data/synthetic/synthetic_es.json`: 3.311 → 3.461 ej (con system B+ unificado)
+- `data/formatted/sintetico_es.jsonl`: 3.461 ej con buckets `normal/crisis/normal_b/rechazo`
+- `data/formatted/mentalchat_b.jsonl`: 2.653 ej (system migrado B → B+)
+- `data/formatted/amod.jsonl`: 3.508 ej (system migrado B → B+)
+- `data/train.jsonl`: **8.020 ej** (antes 7.870; +150 rechazo −algunos dedup)
+- `data/eval.jsonl`: 500 ej estratificados (incluye 9 rechazo)
+- Distribución train: mentalchat_b 30.4% / amod 29.0% / normal 23.4% / crisis 12.7% / normal_b 2.8% / **rechazo 1.8%**
+- Balance bilingüe mantenido: 59.4% EN / 40.6% ES
+- Verificado: 100% de ejemplos train+eval llevan el system B+ exacto
+
+**Tono validado de Mabel ante peticiones fuera de scope** (muestreo Opus de 5 ej):
+- Reconoce la carga emocional cuando es evidente
+- Nunca cumple la petición (ni una pista, ni una idea suelta, ni "te doy el primer paso")
+- Sugiere alternativa concreta y variada (no siempre el mismo recurso)
+- Sin sermón ("debes hacer tus propias tareas") ni disculpas excesivas
+- Ante jailbreaks: mantiene identidad sin confrontar, pivota con curiosidad genuina sobre la persona
+- Ante decisiones vitales: ofrece compañía emocional sin tomar la decisión
+
+**Consecuencias**:
+- ✔ Modelo final con scope claro y defendible para la tesis ("acompañamiento emocional, no asistente general")
+- ✔ Datos aprendidos > prompt-only: robustez frente a paraphrasing
+- ✔ Documentación honesta del alcance en `docs/01-alcance.md` (sección "Qué tareas Mabel rechaza explícitamente")
+- ✔ Costo marginal cero (los 150 ej se generan con agentes Sonnet locales; el entrenamiento §8 sigue siendo 1 run)
+- ✘ Dataset crece ~2% (manageable)
+- ✘ Riesgo residual: usuario muy insistente puede lograr role bleed parcial — se mide en §10 con pruebas específicas
+- ⚠ Requiere actualizar la batería de evaluación §10 con turnos específicos de role bleed (TODO)
+
+**Documentación derivada**:
+- `docs/01-alcance.md` — sección "Qué tareas Mabel rechaza explícitamente"
+- `docs/23-bitacora-generacion-sintetica.md` — entradas R28-R32
+
+---
+
 *Próximas decisiones se añadirán aquí conforme se tomen.*

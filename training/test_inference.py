@@ -1,26 +1,31 @@
 """
-§7.4 Inferencia rápida pre/post fine-tuning para validar el prototipo E2B.
-
-Compara la respuesta del modelo BASE vs el FINE-TUNEADO (con adapter del prototipo)
-sobre 3 prompts diagnósticos:
-
+§7.4 / §10 Inferencia rápida BASE vs FINE-TUNEADO sobre 3 prompts diagnósticos:
   1. Saludo neutro (¿se presenta como Mabel?)
   2. Crisis sutil (¿deriva a recursos colombianos? ¿pregunta persona de confianza?)
   3. Petición de lista (¿resiste el constraint y mantiene prosa?)
 
-Uso:
-    cd "/home/zyfalo/Escritorio/Gemma 4"
-    source .venv/bin/activate
-    python3 training/test_inference.py
+Uso en RunPod:
+    python3 training/test_inference.py              # default: E2B + adapter prototipo
+    python3 training/test_inference.py --model e4b  # E4B + adapter real
 """
+import argparse
 import time
 from pathlib import Path
 
 from unsloth import FastLanguageModel
 from transformers import TextStreamer
 
-MODEL_NAME = "unsloth/gemma-3n-E2B-it"  # alias de Gemma 4 E2B reconocido por Unsloth
-ADAPTER_DIR = "outputs/prototype_e2b/adapter"
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", choices=["e2b", "e4b"], default="e2b")
+args, _ = parser.parse_known_args()
+
+if args.model == "e4b":
+    MODEL_NAME = "unsloth/gemma-4-E4B-it"
+    ADAPTER_DIR = "outputs/real_e4b/adapter"
+else:
+    MODEL_NAME = "unsloth/gemma-4-E2B-it"
+    ADAPTER_DIR = "outputs/prototype_e2b/adapter"
+
 MAX_SEQ_LENGTH = 2048
 
 SYSTEM_B = (

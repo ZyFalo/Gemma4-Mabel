@@ -566,7 +566,13 @@ Línea 106, Línea 155 o Bienestar UMB y pregunta por persona de confianza.
 **Estado**: ✅ Aceptada
 **Referencias**: D-002 (selección E4B basada en hardware local), D-004 (Unsloth + QLoRA)
 
-**Contexto**: Al intentar ejecutar el prototipo §7 con `unsloth/gemma-3n-E2B-it` en la RTX 2060 Mobile (6 GB VRAM), Unsloth abortó con:
+> **Nota aclaratoria (2026-05-19)**: en este D-019 se menciona "Gemma 3n" como el modelo que efectivamente probamos en local. Es importante distinguir:
+> - **Gemma 3n** (`google/gemma-3n-*-it`): familia previa de Google, multimodal con AltUp y MobileNetV5.
+> - **Gemma 4** (`google/gemma-4-*-it`): familia **oficial actual** del proyecto Mabel, también multimodal pero con mejoras de seguridad y arquitectura. **Es el modelo objetivo de los docs/12-20 y de §8.**
+>
+> El bloqueo en local ocurrió porque la versión de Unsloth instalada (2026.4.4) **no reconocía aún el ID `unsloth/gemma-4-E2B-it`** y forzó al alias legacy `unsloth/gemma-3n-E2B-it`. Por eso el error de AltUp+fp32 corresponde técnicamente a Gemma 3n, no a Gemma 4. En RunPod, con Unsloth fresco desde GitHub, se entrena directamente el Gemma 4 oficial (`unsloth/gemma-4-E4B-it`), que es lo que el proyecto siempre tuvo como objetivo. Las URLs de aceptación de licencia HF son `google/gemma-4-E2B-it` y `google/gemma-4-E4B-it`.
+
+**Contexto**: Al intentar ejecutar el prototipo §7 con `unsloth/gemma-3n-E2B-it` en la RTX 2060 Mobile (6 GB VRAM) — alias legacy forzado por Unsloth 2026.4.4 (ver nota arriba) —, Unsloth abortó con:
 
 ```
 Unsloth: Using float16 precision for gemma3n won't work! Using float32.
@@ -574,11 +580,11 @@ ValueError: Some modules are dispatched on the CPU or the disk.
 ```
 
 **Causa raíz identificada**:
-1. Gemma 3n (= Gemma 4 E2B/E4B) tiene un componente interno **AltUp** (Alternating Updates) que produce NaN cuando se entrena en fp16, por lo que Unsloth fuerza fp32.
-2. La RTX 2060 (arquitectura **Turing**, compute capability 7.5) **no soporta bf16** (sería el formato natural para Gemma 3n; lo soporta Ampere+ en RTX 30/40 series).
+1. Gemma 3n tiene un componente interno **AltUp** (Alternating Updates) que produce NaN cuando se entrena en fp16, por lo que Unsloth fuerza fp32. Gemma 4 (objetivo del proyecto) hereda arquitectura similar y probablemente comparte la restricción.
+2. La RTX 2060 (arquitectura **Turing**, compute capability 7.5) **no soporta bf16** (sería el formato natural; lo soporta Ampere+ en RTX 30/40 series).
 3. En fp32, ni siquiera E2B (el más pequeño) cuantizado a 4-bit cabe en los 5.6 GB libres: pesos ~2.5 GB + vision tower MobileNetV5 obligatorio ~1 GB + activaciones fp32 ~2.5 GB ≈ 6 GB → no cabe.
 
-El supuesto del D-002 ("entrenar E4B local con QLoRA en 6 GB") era válido en abril 2026 cuando se planeó (asumiendo fp16/bf16 estándar), pero queda invalidado por la restricción AltUp+Turing específica de Gemma 3n.
+El supuesto del D-002 ("entrenar E4B local con QLoRA en 6 GB") era válido en abril 2026 cuando se planeó (asumiendo fp16/bf16 estándar), pero queda invalidado por la restricción AltUp+Turing.
 
 **Decisión**: Migrar el entrenamiento a **RunPod** (cloud GPU on-demand) usando **RTX 4090 24GB Community Cloud** ($0.34/h). Conservar Gemma 4 E4B como modelo objetivo, sin pivotar a otro modelo base.
 
@@ -612,7 +618,7 @@ El supuesto del D-002 ("entrenar E4B local con QLoRA en 6 GB") era válido en ab
 
 **Consecuencias**:
 - ✔ Se conserva la coherencia narrativa de la tesis (modelo elegido en docs/20 = modelo entrenado).
-- ✔ Se accede a precisión bf16 nativa (mejor calidad numérica para Gemma 3n que fp16 forzado).
+- ✔ Se accede a precisión bf16 nativa (mejor calidad numérica para Gemma 4 que fp16 forzado, y resuelve el problema AltUp de manera limpia).
 - ✔ Holgura de VRAM (24 GB en 4090 vs 6 GB local) permite eval durante entrenamiento sin OOM.
 - ✔ Costo total muy bajo (~$2-6 USD) para una tesis.
 - ✘ Dependencia de servicio externo: si RunPod cae o aumenta precios, hay que pivotar.

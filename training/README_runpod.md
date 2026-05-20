@@ -20,7 +20,10 @@
 
 1. **Cuenta RunPod**: registrar en https://runpod.io y recargar $10 USD (mínimo oficial) vía tarjeta de crédito/débito. PayPal y cripto también funcionan.
 2. **HuggingFace token**: ir a https://huggingface.co/settings/tokens → "New token" → tipo "Read" → copiar.
-3. **Licencia Gemma**: ir a https://huggingface.co/google/gemma-3n-e4b-it y aceptar términos (mismo modelo que `unsloth/gemma-4-E4B-it` por ahora).
+3. **Licencias Gemma 4** (aceptar las DOS, son modelos gated independientes):
+   - https://huggingface.co/google/gemma-4-E2B-it → "Agree and access repository" (modelo del §7 prototipo)
+   - https://huggingface.co/google/gemma-4-E4B-it → "Agree and access repository" (modelo del §8 entrenamiento real)
+   - ⚠️ Debe ser la **misma cuenta HF** que generó el token del paso 2.
 4. **Push del repo a GitHub** desde el laptop local (si no está al día):
    ```bash
    git add -A && git commit -m "scripts RunPod listos" && git push

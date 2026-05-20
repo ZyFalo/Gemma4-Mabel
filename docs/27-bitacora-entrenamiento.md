@@ -4,6 +4,8 @@ Registro cronológico del proceso de fine-tuning de Mabel. Las decisiones técni
 
 ---
 
+> **Nota aclaratoria sobre nomenclatura (2026-05-19)**: en este documento "Gemma 3n" aparece como el modelo que efectivamente intentamos cargar en local. Esto se debe a que Unsloth 2026.4.4 (versión instalada en la máquina local) **no reconocía aún el ID `unsloth/gemma-4-E2B-it`** y forzaba al alias legacy `unsloth/gemma-3n-E2B-it`. El **modelo objetivo del proyecto siempre fue y sigue siendo Gemma 4 oficial** (`google/gemma-4-E2B-it` y `google/gemma-4-E4B-it`), que es lo que se entrena en RunPod con Unsloth fresco desde GitHub. Gemma 3n y Gemma 4 son familias distintas; la causa raíz del bloqueo (AltUp+Turing+6GB) aplica a ambas por compartir arquitectura multimodal.
+
 ## §7.0 Intento local — BLOQUEADO (2026-05-10)
 
 **Hardware**: RTX 2060 Mobile, 6 GB VRAM, kernel Linux 6.17.0-23, driver NVIDIA 580.142 (recompilado via DKMS tras update de kernel).
@@ -64,7 +66,7 @@ TOTAL                          ≈ 6.5 GB → no cabe en 5.6 GB libres
 **Diferencias respecto al plan original**:
 | Parámetro | Plan original (local) | RunPod actual |
 |---|---|---|
-| Precisión | fp16 | **bf16** (mejor numérica para Gemma 3n) |
+| Precisión | fp16 | **bf16** (mejor numérica para Gemma 4 y resuelve AltUp) |
 | GPU | RTX 2060 Mobile 6 GB | RTX 4090 24 GB |
 | Evaluation durante training | No prevista | **Sí, por época** + best-model-selection |
 | Save strategy | Solo final | **Por época**, top 2 conservados |

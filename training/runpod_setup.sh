@@ -22,7 +22,7 @@ pip install --no-cache-dir bitsandbytes trl peft accelerate datasets
 
 echo ""
 echo "===== [3/4] HuggingFace login (necesario para Gemma 4) ====="
-echo "Pega tu HF token (necesita licencia Gemma aceptada en https://huggingface.co/google/gemma-3n-e4b-it):"
+echo "Pega tu HF token (necesita licencias Gemma 4 aceptadas en https://huggingface.co/google/gemma-4-E2B-it y https://huggingface.co/google/gemma-4-E4B-it):"
 huggingface-cli login
 
 echo ""

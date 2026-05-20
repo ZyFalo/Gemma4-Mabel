@@ -152,6 +152,24 @@ Estos son los pasos que NO están reflejados aún en `training/runpod_setup.sh` 
    - `Unsloth: Your Flash Attention 2 installation seems to be broken. Using Xformers instead. No performance changes will be seen.`
    - Unsloth mismo confirma que no hay degradación. Ignorar.
 
+7. **HuggingFace cache se llena el container disk (20 GB) — mover al volume disk**:
+   - El cache por defecto vive en `/root/.cache/huggingface/`, que en el template RunPod está en el **container disk de 20 GB** (ephemeral, se borra al stop del pod).
+   - Al descargar E2B (~2 GB) + intentar descargar E4B (~5-7 GB) + dependencias preinstaladas → `OSError: No space left on device (os error 28)` durante `_download_to_tmp_and_move`.
+   - El volume disk de 50 GB en `/workspace` queda libre y es persistente entre stops del pod.
+   - Fix aplicado en sesión activa:
+     ```bash
+     mkdir -p /workspace/hf_cache
+     mv /root/.cache/huggingface/* /workspace/hf_cache/ 2>/dev/null
+     export HF_HOME=/workspace/hf_cache
+     export HF_HUB_CACHE=/workspace/hf_cache/hub
+     # Persistir en bashrc para futuras conexiones SSH
+     cat >> ~/.bashrc << 'EOF'
+     export HF_HOME=/workspace/hf_cache
+     export HF_HUB_CACHE=/workspace/hf_cache/hub
+     EOF
+     ```
+   - **TODO en script**: añadir estas variables de entorno y el `mkdir` en `training/runpod_setup.sh` ANTES del `hf auth login`, para evitar el OOM de disco en setups frescos.
+
 6. **Gemma 4 multimodal exige content como lista de bloques en `apply_chat_template`**:
    - El processor de Gemma 4 (multimodal: texto + imagen + video + audio) requiere `message["content"]` como **lista de dicts tipados**, no como string. Si se pasa string falla con:
      ```

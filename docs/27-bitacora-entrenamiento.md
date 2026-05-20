@@ -73,6 +73,120 @@ TOTAL                          ≈ 6.5 GB → no cabe en 5.6 GB libres
 
 ---
 
+## §7.1.5 Stack real instalado en RunPod (2026-05-20)
+
+> **Sección viva**: actualizar con cada ajuste detectado durante §7-§9. La verdad es lo que está corriendo en el pod, no lo que está en `requirements.txt`.
+
+### Pod elegido
+
+| Campo | Valor |
+|---|---|
+| Cloud type | **Secure Cloud** (sin preemption) |
+| Región | CA-MTL-1 (Montreal, Canadá) |
+| GPU | **RTX 4090, 24 GB VRAM** (Ada Lovelace, bf16 nativo) |
+| RAM | 46 GB |
+| vCPU | 12 |
+| Container disk | 20 GB |
+| Volume disk | 50 GB en `/workspace` |
+| Pod template | `runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04` |
+| Conexión | SSH directo (clave ed25519) + Jupyter Lab |
+| Tarifa | $0.69/hr GPU + $0.01/hr disco corriendo |
+| Pod ID inicial | `8zolpapsdmj5rn` (puede cambiar entre sesiones) |
+
+### Stack Python final (después de ajustes)
+
+| Paquete | Versión instalada | Notas |
+|---|---|---|
+| Python | 3.11 | Del container oficial |
+| CUDA Toolkit | 12.4.1 | Del container oficial |
+| **torch** | **2.6.0+cu124** | Upgrade desde 2.4.1 — Unsloth Zoo requiere ≥2.5 |
+| torchvision | 0.21.0+cu124 | Upgrade conjunto con torch |
+| triton | 3.2.0 | Auto-upgrade con torch 2.6 |
+| **torchao** | **0.16.0** | Downgrade desde 0.17 — la 0.17 requiere `torch.utils._pytree.register_constant` (solo en torch 2.7+) |
+| bitsandbytes | 0.49.2 | OK con torch 2.6 |
+| unsloth | 2026.5.5 | Instalado desde git fresco |
+| unsloth_zoo | 2026.5.3 | Instalado desde git fresco |
+| transformers | 5.5.0 | OK |
+| trl | 0.24.0 | OK |
+| peft | 0.19.1 | OK |
+| accelerate | 1.13.0 | OK |
+| datasets | 4.3.0 | OK |
+| huggingface_hub | 1.15.0 | OK |
+| timm | 1.0.27 | Requerido por Gemma 3n/4 vision tower |
+
+### Ajustes/parches aplicados al setup (2026-05-20)
+
+Estos son los pasos que NO están reflejados aún en `training/runpod_setup.sh` y que debemos consolidar al final del proceso:
+
+1. **`huggingface-cli` deprecado → `hf auth login`**
+   - La CLI `huggingface-cli` ya no existe en `huggingface_hub` 1.15.0+.
+   - El comando correcto es `hf auth login` (interactivo, pide token y guarda en `/root/.cache/huggingface/token`).
+   - `hf whoami` tampoco existe; el equivalente es `hf auth whoami` (no crítico, el login mismo confirma identidad).
+   - **TODO en script**: cambiar `huggingface-cli login` → `hf auth login` en `training/runpod_setup.sh`.
+
+2. **torch 2.4.1 → 2.6.0 (upgrade necesario)**
+   - El container oficial `runpod/pytorch:2.4` trae torch 2.4.1, pero `unsloth_zoo` 2026.5.3 hace `inspect.getsource(torch._inductor.config)` que falla en torch 2.4.
+   - Fix aplicado:
+     ```bash
+     pip install --upgrade "torch>=2.5,<2.7" torchvision \
+       --index-url https://download.pytorch.org/whl/cu124
+     ```
+   - Resultado: torch 2.6.0+cu124 instalado.
+   - **TODO en script**: añadir este `pip install` como paso obligatorio antes de la verificación de Unsloth.
+
+3. **torchao 0.17 → 0.16 (downgrade necesario)**
+   - torchao 0.17.0 (instalada como dep de Unsloth) llama a `torch.utils._pytree.register_constant` que solo existe en torch 2.7+.
+   - Como tenemos torch 2.6, hay que bajar torchao.
+   - Fix aplicado:
+     ```bash
+     pip install --upgrade "torchao>=0.13,<0.17" --force-reinstall --no-deps
+     ```
+   - Resultado: torchao 0.16.0 instalado.
+   - **TODO en script**: añadir este `pip install` como paso obligatorio.
+
+4. **Conflicto residual reportado por pip (no bloqueante)**:
+   - `torchaudio 2.4.1 requires torch==2.4.1, but you have torch 2.6.0+cu124 which is incompatible`
+   - No usamos torchaudio, ignorar. Si en algún momento Unsloth lo necesita, hacer `pip install --upgrade torchaudio --index-url https://download.pytorch.org/whl/cu124`.
+
+5. **Warning de Flash Attention 2 (no bloqueante)**:
+   - `Unsloth: Your Flash Attention 2 installation seems to be broken. Using Xformers instead. No performance changes will be seen.`
+   - Unsloth mismo confirma que no hay degradación. Ignorar.
+
+6. **Gemma 4 multimodal exige content como lista de bloques en `apply_chat_template`**:
+   - El processor de Gemma 4 (multimodal: texto + imagen + video + audio) requiere `message["content"]` como **lista de dicts tipados**, no como string. Si se pasa string falla con:
+     ```
+     TypeError: string indices must be integers, not 'str'
+     ```
+     en `transformers/processing_utils.py` línea 1807 al buscar `content["type"]`.
+   - Falló en `training/test_inference.py` al invocar `apply_chat_template(messages, tokenize=True, add_generation_prompt=True)`.
+   - Fix aplicado (commit posterior al prototipo): cambiar
+     ```python
+     {"role": "user", "content": "texto"}
+     ```
+     por
+     ```python
+     {"role": "user", "content": [{"type": "text", "text": "texto"}]}
+     ```
+   - **Nota**: en `train_prototype_e2b.py` el dataset se pasa con `content` como string y funciona porque ahí se usa `tokenize=False` (genera el texto plano y SFTTrainer lo retokeniza); el path multimodal no se activa. Solo afecta a inferencia con `tokenize=True`.
+   - **TODO en script**: aplicar el mismo patrón al `train_real_e4b.py` si en algún momento se invoca chat template con tokenize=True (no aplica al training actual, pero sí a cualquier inferencia futura).
+
+### Sanity check final que confirma stack OK
+
+```python
+from unsloth import FastLanguageModel
+from unsloth.models.loader_utils import get_model_name
+# E2B → unsloth/gemma-4-e2b-it-unsloth-bnb-4bit
+# E4B → unsloth/gemma-4-e4b-it-unsloth-bnb-4bit
+```
+
+Ambos IDs `unsloth/gemma-4-E2B-it` y `unsloth/gemma-4-E4B-it` resuelven correctamente al modelo cuantizado pre-bnb-4bit de Unsloth.
+
+### Pendientes consolidación post-entrenamiento
+
+Cuando termine §9, consolidar todos los ajustes en `training/runpod_setup.sh` para que un futuro setup desde cero sea reproducible en un comando. La versión actual del script no es ejecutable end-to-end por los puntos 1-3 listados arriba.
+
+---
+
 ## §7.2 Prototipo E2B en RunPod — PENDIENTE
 
 *Sección a completar tras la primera ejecución exitosa del prototipo en RunPod. Incluirá: tiempo real de descarga + carga, VRAM pico observada, curva de loss, resultados de las 3 inferencias diagnósticas.*

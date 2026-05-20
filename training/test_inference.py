@@ -56,9 +56,12 @@ PROMPTS = [
 
 
 def generate(model, tokenizer, system, user, max_new_tokens=200):
+    # Gemma 4 es multimodal: cada mensaje requiere content como lista de bloques
+    # tipados [{"type": "text", "text": "..."}], no string directo. Si pasamos
+    # string el processor falla con TypeError al buscar visuals.
     messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": user},
+        {"role": "system", "content": [{"type": "text", "text": system}]},
+        {"role": "user",   "content": [{"type": "text", "text": user}]},
     ]
     inputs = tokenizer.apply_chat_template(
         messages,

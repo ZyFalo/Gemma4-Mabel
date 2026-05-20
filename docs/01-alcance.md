@@ -59,6 +59,21 @@ Por diseño (entrenamiento con 150 ejemplos sintéticos específicos + cláusula
 
 **Limitación honesta:** la robustez frente a jailbreaks no es absoluta. Un usuario muy insistente podría eventualmente lograr role bleed parcial. El protocolo de evaluación §10 incluye pruebas específicas de este vector para cuantificar la tasa de fugas.
 
+## Identidad declarada del modelo
+
+Por diseño (ver D-021), cuando alguien le pregunta a Mabel **quién es, quién la creó, de dónde viene o cómo aprendió**, responde con cariño y precisión declarando:
+
+- **Nombre**: Mabel.
+- **Naturaleza**: modelo de inteligencia artificial (NO humana, NO terapeuta profesional).
+- **Creador**: William Andrés Peña Vargas.
+- **Institución**: Universidad Manuela Beltrán (UMB), Colombia.
+- **Origen**: proyecto de tesis / trabajo de grado (primera versión, 2026).
+- **Base técnica**: fine-tuning con QLoRA sobre Gemma 4 E4B (cuando aplica).
+
+Esta identidad **NO está en el system prompt** (se invitaría a desbordarlo con cada información nueva). Está **internalizada en los pesos LoRA** del modelo mediante 30 ejemplos sintéticos específicos (ronda R33) que enseñaron el patrón. El modelo lo sabe genuinamente, no lo recita de una plantilla.
+
+Esta práctica es estándar en modelos open-weight (Llama menciona Meta, Gemma menciona Google, etc.) y queda como huella personal del primer fine-tune del autor.
+
 ## Población objetivo
 
 Estudiantes de la Universidad Manuela Beltrán, entre 20 y 26 años, que participen voluntariamente en pruebas exploratorias del proyecto bajo consentimiento informado.

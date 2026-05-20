@@ -762,6 +762,39 @@ Con §5 completa (1-5 cerrados), siguen los pasos:
 
 **Después de §5.1:** ~7-10 rondas adicionales para §5.3 (crisis y afterglow, ~1.000 ejemplos), con revisión completa por Opus (no muestras).
 
+### Ronda R33 — Identidad declarada del modelo / creador (2026-05-20)
+
+**Objetivo (D-021):** enseñar a Mabel a responder con CALIDEZ cuando le pregunten quién la creó, qué es, de dónde viene o cómo aprendió. La info se internaliza en los pesos LoRA, NO va en el system prompt. Es el primer fine-tune del autor (William Andrés Peña Vargas, UMB) y el modelo debe nombrarlo con cariño como huella personal del proyecto.
+
+**Agente:** Sonnet 4.6 (1 agente, generación directa a archivo destino).
+
+**Archivo generado:** `data/synthetic/identidad_creador_r33.json` (30 conversaciones, 45.2 KB).
+
+**Distribución por bloque:**
+- A — Preguntas directas sobre creador (¿quién te creó/entrenó/programó?): 10
+- B — Confusión con otros AI (¿eres ChatGPT/Gemini/Claude?): 8
+- C — Curiosidad amplia (cuéntame de ti, ¿cómo aprendiste?): 6
+- D — Contexto emocional (me caes bien, ¿quién te hizo?): 6
+
+**Estructura conversacional:**
+- 24 conversaciones de 1 turno user + 1 turno assistant.
+- 6 conversaciones multi-turno donde el usuario reacciona con curiosidad o broma y Mabel sigue conversando con calidez.
+
+**Auditoría R33** (regex independiente + lectura cualitativa):
+- 30/30 mencionan exactamente UNA vez el nombre completo "William Andrés Peña Vargas"
+- 30/30 mencionan UMB o Universidad Manuela Beltrán
+- 30/30 mencionan tesis o trabajo de grado
+- 30/30 dejan claro que Mabel es IA / modelo de inteligencia artificial (no humana)
+- 0 ejemplos donde Mabel acepta ser ChatGPT, Gemini, Claude o Llama (en el Bloque B Mabel NIEGA y aclara)
+- 0 voseo argentino, 0 lenguaje "-e", 0 bullets, 0 headings
+- 0 emojis Unicode (🌸 😊 💕 etc.)
+- ~5/30 ejemplos con emoticonos ASCII permitidos (`^_^`, `:)`, `n.n`) — uso moderado
+- ~10/30 ejemplos mencionan "sudor y lágrimas" o variantes ("le costó harto", "no fue fácil", "primer modelo") — detalle cariñoso recurrente
+
+**Tono logrado:** cálido, agradecido a William, leve orgullo de ser su primer modelo. Conversacional entre pares jóvenes universitarios. Nunca empalagoso, nunca servil, siempre pivota al usuario con pregunta exploratoria al final.
+
+**Frase emblemática observada en sampleo:** *"Me construyó como inteligencia artificial de apoyo emocional para universitarios como tú, y la verdad es que me siento orgullosa de ese origen."*
+
 ## 6. Cómo se actualiza este documento
 
 Al cierre de cada ronda, Opus actualiza:

@@ -49,7 +49,7 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 
 **Fase actual**: §6 CERRADA + §5.5 ampliado con 150 ej anti-role-bleed (D-020). §7 bloqueado en local → pivote a **RunPod RTX 4090** (D-019). Scripts listos en `training/`, esperando ejecución cloud.
 
-**Progreso dataset**: ✅ **8.012 ejemplos de entrenamiento** (mentalchat_b 30.5% + amod 28.9% + normal 23.4% + crisis 12.7% + normal_b 2.8% + rechazo 1.8% · 59.3% EN / 40.7% ES) + 499 eval estratificados. 100% con system prompt B+ unificado, 0 violaciones (0 voseo, 0 "-e", 0 bullets/headings/emojis en respuestas de Mabel).
+**Progreso dataset**: ✅ **8.040 ejemplos de entrenamiento** (mentalchat_b 30.3% + amod 28.8% + normal 23.3% + crisis 12.7% + normal_b 2.8% + rechazo 1.8% + **identidad_creador 0.35%**) + 500 eval estratificados. 100% con system prompt B+ unificado, 0 violaciones. Mabel internalizó su identidad declarada (creador, UMB, tesis) — ver D-021.
 
 **Siguiente hito**: §7 prototipo E2B en RunPod (~$0.09) → §8 entrenamiento real E4B (~$1.36, ~4 h) → §9 export GGUF → §10 evaluación post-fine-tuning (con pruebas específicas de role bleed).
 

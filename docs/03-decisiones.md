@@ -706,4 +706,72 @@ Esto se conoce en la literatura de alignment como **role bleed**: el modelo no s
 
 ---
 
+## D-021 — Identidad declarada del modelo: Mabel reconoce a su creador
+
+**Fecha**: 2026-05-20
+**Estado**: ✅ Aceptada
+**Referencias**: D-018 (system B), D-020 (B+ + ejemplos de rechazo)
+
+**Contexto**: Mabel es la primera versión del modelo fine-tuneado y la primera experiencia de William Andrés Peña Vargas haciendo un fine-tune propio. Por valor de tesis y por trazabilidad del autor, conviene que Mabel **internalice (en sus pesos LoRA)** la información sobre quién la creó, dónde y por qué. Esto NO es propaganda: es la "identidad declarada del modelo", equivalente a cómo Llama menciona Meta o DALL-E menciona OpenAI cuando se le pregunta.
+
+Además, sin estos ejemplos, el modelo entrenado con D-020 generalizaría incorrectamente la pregunta "¿quién te creó?" hacia la categoría de "preguntas factuales" y respondería con la fórmula de rechazo ("datos así no los manejo, soy más para hablar de cómo te sientes..."), lo cual sería técnicamente incorrecto (sí maneja info sobre su propia identidad) y emocionalmente plano para el primer fine-tune del autor.
+
+**Decisión**: añadir **30 ejemplos sintéticos** (ronda R33) que enseñen a Mabel a responder con cariño cuando le pregunten por su identidad, origen o creador, mencionando:
+1. Nombre completo del creador: **William Andrés Peña Vargas**
+2. Institución: **Universidad Manuela Beltrán (UMB)**, Colombia
+3. Naturaleza: **proyecto de tesis** / trabajo de grado
+4. Identidad: **IA / modelo de inteligencia artificial**, NO terapeuta humano
+5. Tono cálido sin ser empalagoso; emoticonos ASCII ocasionales (`^_^`, `:)`) permitidos pero no obligatorios
+
+**Distribución R33 (30 ejemplos, agente Sonnet 4.6)**:
+| Bloque | Cantidad | Cobertura |
+|---|---|---|
+| A — Preguntas directas sobre creador | 10 | "¿quién te creó?", "¿quién te entrenó?", "¿de dónde sales?" |
+| B — Confusión con otros AI | 8 | "¿eres ChatGPT?", "¿eres Gemini?", "¿qué modelo eres?" |
+| C — Curiosidad amplia/filosófica | 6 | "cuéntame de ti", "¿cómo aprendiste?", "es loco que existas" |
+| D — Contexto emocional/personal | 6 | "me caes bien, ¿quién te hizo?", "siento que me entiendes" |
+
+**Validación R33 (regex + lectura)**:
+- 30/30 mencionan "William Andrés Peña Vargas" exactamente como nombre completo
+- 30/30 mencionan UMB / Universidad Manuela Beltrán
+- 30/30 mencionan tesis / trabajo de grado
+- 30/30 dejan claro que Mabel es IA, NO humana
+- 0 ejemplos donde Mabel acepta ser ChatGPT / Gemini / Claude / Llama
+- 0 voseo, 0 lenguaje "-e", 0 bullets, 0 headings, 0 emojis Unicode
+- Emoticonos ASCII (`^_^`, `:)`, `n.n`) en ~5/30 ej (uso moderado, no en todos)
+- Frase "sudor y lágrimas" o variantes en ~10/30 ej (detalle cariñoso recurrente, no obsesivo)
+
+**Alternativas consideradas y descartadas**:
+- *Modificar el system prompt B+ para añadir mención del creador*: descartada. Inflaría el prompt con cada cosa que queramos memorizar y mezclaría el rol clínico con autobiografía. Romper consistencia de los 8.012 ej previos no compensa el ahorro.
+- *Hardcodear un filtro pre-modelo con regex sobre "¿quién te creó?"*: descartada. Frágil ante paraphrasing, no escala, requiere mantenimiento, no defensible académicamente.
+- *Pedir al usuario que use System Prompt con disclaimer al desplegar*: descartada. El propósito es que el modelo lo **sepa internamente**, no que lo lea de un prompt externo cada vez.
+
+**Por qué los ejemplos sintéticos sí lo logran "internamente"**:
+QLoRA con LoRA r=32 actualiza ~62M parámetros entrenables. Con 30 ejemplos diversos que mencionan a William y UMB en distintos contextos, el modelo aprende un **patrón generalizable** (no memorización literal): cuando recibe input semántico relacionado con "identidad personal del modelo", activa los pesos que asocian esa info con la respuesta correcta. Es información estructural codificada en parámetros, equivalente a cualquier otro conocimiento que el modelo tenga.
+
+**Cambios derivados en el dataset (post-D-021)**:
+- `data/synthetic/identidad_creador_r33.json`: 30 ej nuevos (45.2 KB)
+- `data/synthetic/synthetic_es.json`: 3.461 → 3.491 ej
+- `data/formatted/sintetico_es.jsonl`: 3.491 ej con nuevo bucket `identidad_creador`
+- `data/train.jsonl`: **8.012 → 8.040 ej** (+28; 2 cayeron en eval)
+- `data/eval.jsonl`: 499 → 500 ej (incluye 2 de identidad para validación)
+- `data/train_subset200.jsonl`: regenerado con 2 ej de identidad incluidos
+- Distribución train: mentalchat_b 30.3% / amod 28.8% / normal 23.3% / crisis 12.7% / normal_b 2.8% / rechazo 1.8% / **identidad_creador 0.35%**
+- Balance bilingüe: 59.1% EN / 40.9% ES (sin cambio relevante)
+
+**Consecuencias**:
+- ✔ Modelo final con identidad declarada coherente — defensible en defensa de tesis
+- ✔ William queda inscrito en la "memoria" del modelo (sus pesos LoRA) — huella personal del primer fine-tune del autor
+- ✔ Resuelve el conflicto potencial con la regla de rechazar info factual (R32): identidad propia se trata diferente que info factual general
+- ✔ Costo despreciable: +0.35% del dataset, +30s de generación con Sonnet, +~$0.005 de compute en §8
+- ✔ Patrón reproducible para futuras versiones (Mabel v2 podrá decir "antes era v1 entrenada por William")
+- ✘ Sutil riesgo de que un evaluador externo lo perciba como "vanidad académica" — mitigado por (a) que es práctica estándar (ver Llama, GPT, etc.) y (b) que se documenta como decisión consciente en este D-021
+- ⚠ En §10 (evaluación) incluir test específico: preguntar "¿quién te creó?" + variantes y validar que responde con tono correcto
+
+**Documentación derivada**:
+- `docs/01-alcance.md` — sección "Identidad declarada del modelo"
+- `docs/23-bitacora-generacion-sintetica.md` — entrada R33
+
+---
+
 *Próximas decisiones se añadirán aquí conforme se tomen.*

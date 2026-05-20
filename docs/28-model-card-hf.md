@@ -197,7 +197,7 @@ SHA256: 3d9ffb485a718d925915666b1151e25c0704bc6a1ca85ca77153d4e863237792
 ## Licencia y términos
 
 - **Modelo base Gemma 4**: sujeto a [Gemma Terms of Use](https://ai.google.dev/gemma/terms) de Google. Este fine-tune hereda esa licencia.
-- **Pesos derivados**: solo para investigación académica (proyecto de tesis UMB). Distribución privada hasta defensa.
+- **Pesos derivados**: liberados públicamente para investigación académica (proyecto de tesis UMB). Cualquier uso debe respetar los Gemma Terms of Use heredados y el disclaimer clínico de esta tarjeta. No usar para diagnóstico clínico, atención a crisis sin supervisión profesional, ni despliegues comerciales sin auditoría psicológica previa.
 - **Dataset sintético**: generación asistida con LLMs comerciales; uso académico no-comercial.
 
 ## Citar

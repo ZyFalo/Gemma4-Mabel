@@ -152,6 +152,22 @@ Estos son los pasos que NO están reflejados aún en `training/runpod_setup.sh` 
    - `Unsloth: Your Flash Attention 2 installation seems to be broken. Using Xformers instead. No performance changes will be seen.`
    - Unsloth mismo confirma que no hay degradación. Ignorar.
 
+8. **stdout buffering con `nohup` oculta los loss reports en tiempo real**:
+   - Al lanzar el training con `nohup python3 training/train_real_e4b.py > outputs/real_e4b/run.log 2>&1 &`, Python detecta que stdout NO es una TTY (es un archivo) y aplica buffering agresivo. Los `print({'loss': X.XX, ...})` que `SFTTrainer` ejecuta cada `logging_steps=10` quedan en buffer de memoria del proceso y **no se escriben a disco hasta que el buffer se llena o termina la época**.
+   - Adicionalmente, las barras de progreso de tqdm usan `\r` (carriage return) para sobrescribir la misma línea — eso ya hace ruido en el log file pero NO oculta los reports de loss (ese es el buffering).
+   - Síntoma observado: el log file mostraba solo `8%|▊  | 233/3015 [20:25<3:55:04, 5.07s/it]` durante 30+ min, sin reports `{'loss': X.XX}`. `grep "loss" run.log` devolvía 0 hits. El training estaba ejecutándose correctamente (GPU al 31-90%, VRAM estable en 13 GB, proceso vivo con PID consistente), pero los reports estaban bufferizados en memoria.
+   - Mitigación en sesión activa: ninguna (ya está corriendo). Los reports aparecerán al final de cada época cuando `SFTTrainer` ejecuta `eval` y hace flush implícito del buffer.
+   - **Fix para futuras runs**:
+     ```bash
+     # Opción 1: -u fuerza unbuffered en Python
+     nohup python3 -u training/train_real_e4b.py > outputs/real_e4b/run.log 2>&1 &
+
+     # Opción 2: variable de entorno (equivalente)
+     PYTHONUNBUFFERED=1 nohup python3 training/train_real_e4b.py > outputs/real_e4b/run.log 2>&1 &
+     ```
+   - **TODO en script**: añadir `-u` al comando recomendado en `training/README_runpod.md` (sección §8 lanzamiento). El script `train_real_e4b.py` ya está bien; solo es ajustar cómo se invoca con `nohup`.
+   - **Verificación cuando vuelva a aparecer este patrón**: si `grep loss` devuelve vacío pero `ps aux | grep train` muestra proceso vivo + `nvidia-smi` muestra GPU usage + `wc -l run.log` muestra que el log crece → confiar en que está entrenando, solo esperar al fin de época para ver los reports.
+
 7. **HuggingFace cache se llena el container disk (20 GB) — mover al volume disk**:
    - El cache por defecto vive en `/root/.cache/huggingface/`, que en el template RunPod está en el **container disk de 20 GB** (ephemeral, se borra al stop del pod).
    - Al descargar E2B (~2 GB) + intentar descargar E4B (~5-7 GB) + dependencias preinstaladas → `OSError: No space left on device (os error 28)` durante `_download_to_tmp_and_move`.

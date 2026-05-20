@@ -110,6 +110,84 @@ Preliminarmente, el modelo deriva hacia:
 - ❌ Diagnóstico clínico o sugerencia de medicamentos.
 - ❌ Fine-tuning de modelos mayores a E4B (no viable en hardware disponible).
 - ❌ Alcance multilingüe completo (se limita a español).
-- ❌ Multimodalidad (visión/audio) en la primera versión.
+- ❌ Multimodalidad (visión/audio) en la primera versión — pero ver "Arquitectura propuesta v2" abajo.
 - ❌ Almacenamiento de datos en servicios en la nube (todo queda local).
 - ❌ Uso comercial de los datos recogidos durante las pruebas.
+
+## Arquitectura propuesta v2: Mabel con interfaz de voz (post-tesis)
+
+Aunque v1 opera únicamente en modalidad texto (chat), Mabel está construida sobre **Gemma 4 E4B**, que es un modelo nativamente **multimodal con `audio_tower` (encoder de audio)**. Esto habilita una v2 con capacidad de **escuchar al estudiante** sin requerir re-entrenamiento del LoRA actual ni descargar modelos extras de transcripción.
+
+**Importante**: Gemma 4 NO genera audio nativamente (no tiene speech decoder). La voz de salida se delega a un sistema **Text-to-Speech (TTS) externo** en el frontend/backend, manteniendo a Mabel modular: cerebro = Mabel, voz = capa externa.
+
+### Pipeline propuesto
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ FRONTEND (web app / app móvil)                              │
+│  - Usuario: graba nota de voz O escribe                     │
+│  - Renderiza respuesta como texto (siempre legible)         │
+│  - Opcionalmente reproduce voz con TTS                      │
+└─────────────────────────────────────────────────────────────┘
+              ↓ (audio.wav / texto)        ↑ (texto)
+              ↓                            ↑
+┌─────────────────────────────────────────────────────────────┐
+│ BACKEND API (FastAPI / Express / similar)                   │
+│  - Recibe audio o texto del frontend                        │
+│  - Llama a Mabel con input multimodal                       │
+└─────────────────────────────────────────────────────────────┘
+              ↓                            ↑
+              ↓                            ↑
+┌─────────────────────────────────────────────────────────────┐
+│ MABEL (Gemma 4 E4B fine-tuneada — modelo de la tesis v1)    │
+│  ┌──────────────┐   ┌──────────────┐                        │
+│  │ audio_tower  │   │ text encoder │                        │
+│  └───────┬──────┘   └──────┬───────┘                        │
+│          ↓                 ↓                                │
+│      [Tokens multimodales unificados]                       │
+│          ↓                                                  │
+│      [LoRA r=32 fine-tuned con dataset de la tesis]         │
+│          ↓                                                  │
+│      [Decoder de texto]                                     │
+│          ↓                                                  │
+│      Respuesta en texto: "Te entiendo, eso suena pesado..." │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Stack técnico sugerido (énfasis español colombiano)
+
+| Componente | Tecnología recomendada | Razón |
+|---|---|---|
+| **STT (escuchar)** | `audio_tower` nativo de Gemma 4 | Ya integrado, sin VRAM extra, una sola llamada multimodal |
+| STT alternativo | Whisper-large-v3 (OpenAI, open source) | Si la calidad nativa no convence; excelente español latinoamericano |
+| **Cerebro** | Mabel (esta tesis v1) | Sin cambios; LoRA actual procesa input multimodal sin re-entrenar |
+| **TTS (hablar)** | Coqui XTTS v2 con clonación de voz | Open source, español natural, permite clonar voz colombiana específica para Mabel |
+| TTS alternativo MVP | Web Speech API del browser | Cero infraestructura, voz `es-CO` en Chrome |
+| TTS alternativo premium | ElevenLabs voz "Spanish Colombian Female" | Calidad superior, $5/mes |
+| Backend | FastAPI (Python) | Integración natural con el modelo (mismo lenguaje del fine-tuning) |
+| Frontend | React/Next.js o similar | Web Speech API + grabación de notas de voz nativa en browser |
+
+### Lo que NO requiere v2 (clave de viabilidad)
+
+- ❌ NO re-entrenar el LoRA (los target_modules son solo de texto: q/k/v/o/gate/up/down)
+- ❌ NO descargar modelos adicionales (audio_tower viene incluido)
+- ❌ NO cambiar el GGUF exportado (sigue funcionando en pipeline texto-only)
+- ❌ NO modificar el dataset
+
+### Lo que SÍ requiere v2
+
+- ✅ Backend con FastAPI que reciba audio/texto y use `Gemma4ForConditionalGeneration` (en lugar del path texto-only de llama.cpp)
+- ✅ Frontend con grabación de audio y reproducción TTS
+- ✅ Decisión sobre voz de Mabel (genérica vs clonada)
+- ✅ Tiempo estimado: 1-2 semanas de desarrollo
+- ⚠️ Requiere correr Mabel sobre PyTorch/Unsloth (no GGUF) para acceder al `audio_tower`. Esto cambia la arquitectura de inferencia: en vez de llama-server local, FastAPI con Mabel cargado en GPU.
+
+### Por qué se difiere a v2
+
+- **Foco de la tesis**: validar viabilidad del fine-tuning especializado, no construir una app de producción.
+- **Tiempo**: cada componente extra (frontend voz, backend multimodal, TTS) suma semanas; v1 cierra el ciclo experimental.
+- **Riesgo**: agregar más componentes aumenta puntos de fallo; v1 con chat texto ya prueba el concepto.
+
+### Real-time conversacional (v3, fuera de scope incluso de v2)
+
+Modo "ChatGPT Voice Mode" / "Gemini Live" (voz bidireccional en tiempo real con interrupciones naturales) **no es viable con Gemma 4 directamente**: requiere un modelo con speech decoder nativo (Moshi de Kyutai, GPT-4o, etc.). Queda documentado como línea de investigación futura.

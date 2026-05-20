@@ -111,8 +111,24 @@ def print_header(model_label):
 
 
 def check_server():
+    """
+    Verifica que hay un servidor activo en SERVER_URL.
+
+    Soporta dos backends compatibles OpenAI:
+    - llama-server (llama.cpp): expone /health → 200
+    - llama_cpp.server (llama-cpp-python): NO expone /health, pero sí /v1/models → 200
+
+    Probamos primero /health (más rápido si está); si 404 o falla, caemos a /v1/models.
+    """
     try:
         r = requests.get(f"{SERVER_URL}/health", timeout=5)
+        if r.status_code == 200:
+            return True
+    except Exception:
+        pass
+    # Fallback: probar /v1/models (estándar OpenAI, ambos backends lo exponen)
+    try:
+        r = requests.get(f"{SERVER_URL}/v1/models", timeout=5)
         return r.status_code == 200
     except Exception:
         return False

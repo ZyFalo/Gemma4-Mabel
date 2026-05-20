@@ -204,6 +204,43 @@ Estos son los pasos que NO están reflejados aún en `training/runpod_setup.sh` 
    - **Nota**: en `train_prototype_e2b.py` el dataset se pasa con `content` como string y funciona porque ahí se usa `tokenize=False` (genera el texto plano y SFTTrainer lo retokeniza); el path multimodal no se activa. Solo afecta a inferencia con `tokenize=True`.
    - **TODO en script**: aplicar el mismo patrón al `train_real_e4b.py` si en algún momento se invoca chat template con tokenize=True (no aplica al training actual, pero sí a cualquier inferencia futura).
 
+### Nota de optimización para futuros re-entrenamientos (post-§10)
+
+Durante el §8 real observado en nvtop:
+- VRAM en uso: **13.4 GB de 24 GB** (~55% — 10 GB libres)
+- GPU utilization: **30-37%** (no saturada)
+- Power draw: 146W / 450W (~32% TDP)
+- Velocidad: 5.17 s/step (constante)
+
+La baja utilización GPU se explica por la combinación `batch_size=1` + `gradient_accumulation=8` + `gradient_checkpointing="unsloth"` + `bf16`: los kernels son muy pequeños para saturar los 16 384 CUDA cores de la 4090, y gradient_checkpointing introduce huecos entre forward/backward.
+
+**Optimización propuesta si se requiere re-entrenar (después de §10 si la evaluación pide ajustes):**
+
+```python
+# En training/train_real_e4b.py SFTConfig
+per_device_train_batch_size=2,        # antes 1
+gradient_accumulation_steps=4,        # antes 8
+# (batch efectivo se mantiene en 8 = sin cambio matemático del optimizer)
+```
+
+**Esperado:**
+- VRAM: subiría a ~18-20 GB (sigue cabiendo en 24 GB con holgura)
+- Throughput: ~2× (kernels más grandes saturan mejor la GPU)
+- Tiempo total: **~4h 20min → ~2h 30min** sin cambiar la calidad del modelo (mismo batch efectivo, misma dinámica de optimización)
+- Costo: misma cantidad de steps pero la mitad del tiempo → **~$0.85 vs ~$1.50** por re-run en 4090 Secure
+
+**Por qué NO aplicarlo a la run actual (en curso):**
+- Requeriría reiniciar desde 0 (perder ~1h ya invertida)
+- El stack actual funciona y converge
+- La diferencia de costo y tiempo (~$0.65, ~1h 50min) no compensa el riesgo de re-validar todo el pipeline
+
+**Cuándo SÍ aplicarlo:**
+- Re-run completo si §10 detecta regresión
+- Iteraciones con dataset modificado (R34, R35, etc.)
+- Cualquier fine-tune nuevo sobre Mabel (v2 con voz, etc.)
+
+**Riesgo a verificar antes de cambiar:** con batch_size=2, las activaciones se duplican; el pico real de VRAM podría llegar a ~22 GB en algún batch con secuencia larga. Si OOM, bajar `max_seq_length` de 2048 a 1536.
+
 ### Sanity check final que confirma stack OK
 
 ```python

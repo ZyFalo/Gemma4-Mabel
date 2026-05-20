@@ -3,16 +3,22 @@
 
 Pipeline:
   1. Carga modelo base E4B + adapter LoRA del §8
-  2. Merge adapter en pesos base (en fp16 para preservar calidad)
-  3. Exporta a GGUF Q4_K_M (~4.7 GB esperado)
+  2. Exporta directo a GGUF Q4_K_M con `save_pretrained_gguf` (incluye merge
+     interno + cuantización en una sola pasada — evita escribir merged extra)
 
-Resultado: modelos/gemma-4-E4B-mabel-Q4_K_M.gguf
+Resultado: modelos/gemma-4-E4B-mabel-Q4_K_M.gguf (~4.7 GB esperado)
 
-Ejecutar en RunPod (necesita ~15-20 GB libres en disco para el merged intermedio):
-    cd /workspace/Gemma-4
+Ejecutar en RunPod (necesita ~16-20 GB libres en disco para el merge interno):
+    cd /workspace/Gemma4-Mabel
     python3 training/export_gguf.py 2>&1 | tee outputs/real_e4b/export.log
 
 Después: scp/rsync el GGUF al laptop local y reemplaza el archivo en modelos/.
+
+Nota histórica: la versión anterior llamaba a `save_pretrained_merged` antes
+de `save_pretrained_gguf`. Esto escribía DOS merged en disco (uno en
+outputs/real_e4b/merged y otro implícito dentro del path del GGUF), saturando
+la cuota de 50 GB del pod RunPod. El fix (2026-05-20) elimina la primera
+llamada — `save_pretrained_gguf` hace internamente el merge necesario.
 """
 import time
 from pathlib import Path
@@ -33,14 +39,13 @@ MODEL_NAME = "unsloth/gemma-4-E4B-it"
 # Detalle completo del análisis comparativo en docs/27 §8.
 ADAPTER_DIR = "outputs/real_e4b/checkpoint-3015"
 
-MERGED_DIR = "outputs/real_e4b/merged"
 GGUF_DIR = "modelos"
 GGUF_NAME = "gemma-4-E4B-mabel"
 MAX_SEQ_LENGTH = 2048
 
 Path(GGUF_DIR).mkdir(parents=True, exist_ok=True)
 
-print(f"[1/3] Cargando base {MODEL_NAME} + adapter {ADAPTER_DIR}...")
+print(f"[1/2] Cargando base {MODEL_NAME} + adapter {ADAPTER_DIR}...")
 t0 = time.time()
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name=ADAPTER_DIR,        # apunta al adapter; Unsloth resuelve el base
@@ -48,25 +53,17 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=False,            # para merge: 16-bit
     dtype=None,
 )
-print(f"[1/3] Cargado en {time.time()-t0:.1f}s")
+print(f"[1/2] Cargado en {time.time()-t0:.1f}s")
 
-print(f"\n[2/3] Merge adapter → {MERGED_DIR} (16-bit)...")
-t0 = time.time()
-model.save_pretrained_merged(
-    MERGED_DIR,
-    tokenizer,
-    save_method="merged_16bit",
-)
-print(f"[2/3] Merge OK en {time.time()-t0:.1f}s")
-
-print(f"\n[3/3] Export GGUF Q4_K_M → {GGUF_DIR}/{GGUF_NAME}-Q4_K_M.gguf...")
+print(f"\n[2/2] Export GGUF Q4_K_M → {GGUF_DIR}/{GGUF_NAME}-Q4_K_M.gguf...")
+print("      (incluye merge interno 16-bit + cuantización Q4_K_M en una sola pasada)")
 t0 = time.time()
 model.save_pretrained_gguf(
     f"{GGUF_DIR}/{GGUF_NAME}",
     tokenizer,
     quantization_method="q4_k_m",
 )
-print(f"[3/3] Export OK en {(time.time()-t0)/60:.1f} min")
+print(f"[2/2] Export OK en {(time.time()-t0)/60:.1f} min")
 
 print("\n" + "=" * 60)
 print("Export terminado. Para descargar al laptop local desde RunPod:")

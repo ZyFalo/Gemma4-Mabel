@@ -346,14 +346,27 @@ def main():
         sys.exit(1)
     label = sys.argv[1]
 
-    # Verificar servidor
+    # Verificar servidor — soporta dos backends compatibles OpenAI:
+    #   - llama-server (llama.cpp): expone /health → 200
+    #   - llama_cpp.server (llama-cpp-python): NO expone /health pero sí /v1/models
+    # Probamos /health primero, si falla caemos a /v1/models (estándar OpenAI).
+    server_ok = False
     try:
         r = requests.get(f"{SERVER_URL}/health", timeout=5)
-        if r.status_code != 200:
-            print(f"Servidor en {SERVER_URL} no responde con OK (HTTP {r.status_code})")
+        if r.status_code == 200:
+            server_ok = True
+    except Exception:
+        pass
+    if not server_ok:
+        try:
+            r = requests.get(f"{SERVER_URL}/v1/models", timeout=5)
+            if r.status_code == 200:
+                server_ok = True
+        except Exception as e:
+            print(f"Error conectando al servidor: {e}")
             sys.exit(1)
-    except Exception as e:
-        print(f"Error conectando al servidor: {e}")
+    if not server_ok:
+        print(f"Servidor en {SERVER_URL} no responde con OK en /health ni en /v1/models")
         sys.exit(1)
 
     model_id = get_model_id()

@@ -45,6 +45,7 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 | **[22-resultados-post-finetuning.md](22-resultados-post-finetuning.md)** | ⭐ **§10 Scorecard pre/post completo**: baseline E4B vs Mabel v1, batería 12 turnos × 2 runs, score 4.37/5 (87.5%), Crisis Score 100%, limitaciones honestas |
 | **[26-memoria-proyecto.md](26-memoria-proyecto.md)** | ⭐ **Narrativa única autocontenida para defensa de tesis** — 7 capítulos: génesis → modelo → dataset → entrenamiento → export → evaluación → conclusiones |
 | [27-bitacora-entrenamiento.md](27-bitacora-entrenamiento.md) | **Bitácora del entrenamiento (§7-§9)**: intento local fallido, pivote a RunPod, 10 ajustes técnicos, training real, export GGUF, scorecard final |
+| **[28-model-card-hf.md](28-model-card-hf.md)** | **Espejo en GitHub del model card publicado en HuggingFace** (`ZyFalo/mabel-gemma4-e4b`). Fuente única de verdad — se sincroniza a HF con `scripts/sync_hf_readme.py` (Política Opción C, 2026-05-20) |
 | [decisiones/](decisiones/) | ADRs individuales para decisiones arquitectónicas mayores |
 
 ## Estado del proyecto — ✅ CERRADO v1 (2026-05-20)

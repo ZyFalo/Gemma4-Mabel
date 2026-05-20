@@ -12,13 +12,13 @@
 | §10 Eval batería | ~30 min | $0.17 |
 | **TOTAL** | **~5-6 h** | **~$1.80 USD** |
 
-**Recarga recomendada:** **$5 USD** (margen 2.5× para imprevistos: re-runs, debug, descargas lentas).
+**Recarga recomendada:** **$10 USD** (mínimo oficial RunPod con tarjeta de crédito/débito normal). Cubre todo el flujo (~$1.80) con margen 5× para imprevistos, re-runs, debug, cuantizaciones GGUF extra, o iteraciones futuras del dataset. Si usas tarjeta prepagada, Stripe puede bloquear montos menores a $100; en ese caso usa una tarjeta normal.
 
 ---
 
 ## Antes de crear el pod
 
-1. **Cuenta RunPod**: registrar en https://runpod.io y recargar $5 USD vía tarjeta/PayPal/cripto.
+1. **Cuenta RunPod**: registrar en https://runpod.io y recargar $10 USD (mínimo oficial) vía tarjeta de crédito/débito. PayPal y cripto también funcionan.
 2. **HuggingFace token**: ir a https://huggingface.co/settings/tokens → "New token" → tipo "Read" → copiar.
 3. **Licencia Gemma**: ir a https://huggingface.co/google/gemma-3n-e4b-it y aceptar términos (mismo modelo que `unsloth/gemma-4-E4B-it` por ahora).
 4. **Push del repo a GitHub** desde el laptop local (si no está al día):

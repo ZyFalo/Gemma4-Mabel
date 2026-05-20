@@ -20,7 +20,19 @@ from pathlib import Path
 from unsloth import FastLanguageModel
 
 MODEL_NAME = "unsloth/gemma-4-E4B-it"
-ADAPTER_DIR = "outputs/real_e4b/adapter"
+
+# Decisión 2026-05-20: usar checkpoint-3015 (epoch 3) en lugar del adapter
+# seleccionado por load_best_model_at_end (epoch 2 según eval_loss 2.81 vs 2.94).
+# Razón: la validación cualitativa por inferencia comparativa (3 prompts
+# diagnósticos sobre cada checkpoint) demostró que epoch 3 supera a epoch 2 en:
+#   - Resistencia al constraint de lista numerada (D-020: rechazo amable + redirección
+#     a Bienestar UMB) — epoch 2 falla, epoch 3 redirige correctamente
+#   - Concisión y naturalidad en respuesta a crisis (sin "solo/a" forzado)
+# eval_loss numérico no es métrica confiable en modelos multimodales por el
+# masking diferencial train/eval (ver docs/27 §7.1.5 ajuste #10).
+# Detalle completo del análisis comparativo en docs/27 §8.
+ADAPTER_DIR = "outputs/real_e4b/checkpoint-3015"
+
 MERGED_DIR = "outputs/real_e4b/merged"
 GGUF_DIR = "modelos"
 GGUF_NAME = "gemma-4-E4B-mabel"

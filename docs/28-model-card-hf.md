@@ -143,7 +143,74 @@ El dataset sintético ES fue generado con LLMs comerciales (Claude Opus 4.7 + So
 - **Alucinación numérica ocasional**: en recursos UMB puede inventar líneas de atención (mitigable con RAG futuro)
 - **Dependencia del system prompt**: requiere el B+ exacto para activación óptima (comportamiento estándar de LoRAs)
 
-## Uso (llama-cpp-python)
+## API pública disponible (Modal.com)
+
+Mabel v1 está desplegado en producción como **endpoint OpenAI-compatible** servido por `llama-server` (llama.cpp oficial) sobre GPU T4 en Modal serverless con scale-to-zero.
+
+```
+POST https://williamandres1603--mabel-api-serve.modal.run/v1/chat/completions
+```
+
+**Drop-in replacement para cualquier app que ya consuma la API de OpenAI**: solo cambian 3 líneas (`base_url`, `api_key`, `model`).
+
+### Ejemplo con OpenAI SDK (Python)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://williamandres1603--mabel-api-serve.modal.run/v1",
+    api_key="not-used",   # llama-server no valida auth por defecto
+)
+
+SYSTEM_B_PLUS = """Te llamas Mabel, asistente de apoyo emocional para estudiantes universitarios colombianos de la UMB. Escucha activa: valida emociones primero y haz preguntas exploratorias para entender lo que pasa. Cuando tenga sentido, ofrece 1-2 sugerencias prácticas breves en prosa, sin imponer. No eres psicóloga profesional, no diagnosticas ni das planes terapéuticos. Tampoco resuelves tareas académicas, código, traducciones, resúmenes ni preguntas factuales: si te las piden, valida la emoción detrás y redirige sin sermonear. Responde en español colombiano, breve (máx 4-5 frases), conversacional, puede usar negrita y cursiva para énfasis, sin headings ni listas con bullets ni emojis. Si hay crisis (suicidio, autolesión), mantén la calma, valida, deriva a Línea 123, Línea 106, Línea 155 o Bienestar UMB y pregunta por persona de confianza."""
+
+response = client.chat.completions.create(
+    model="mabel-gemma4-e4b-Q4_K_M",
+    messages=[
+        {"role": "system", "content": SYSTEM_B_PLUS},
+        {"role": "user", "content": "Hola, me siento mal últimamente"},
+    ],
+    temperature=0.7,
+    max_tokens=500,
+)
+print(response.choices[0].message.content)
+```
+
+### Ejemplo con curl
+
+```bash
+curl https://williamandres1603--mabel-api-serve.modal.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mabel-gemma4-e4b-Q4_K_M",
+    "messages": [
+      {"role": "system", "content": "Te llamas Mabel..."},
+      {"role": "user", "content": "Hola"}
+    ],
+    "temperature": 0.7,
+    "max_tokens": 200
+  }'
+```
+
+### Características operativas del endpoint
+
+| Característica | Valor |
+|---|---|
+| **GPU** | NVIDIA T4 16 GB (serverless on-demand) |
+| **Cold start** | ~60-90 segundos (incluye carga del GGUF a GPU) |
+| **Latencia warm** | 2-5 segundos por respuesta típica de Mabel (80 tokens) |
+| **Scale-to-zero** | 5 minutos sin requests → worker apagado, $0/h |
+| **Throughput** | ~137 tok/s prompt processing, ~37 tok/s generation |
+| **OpenAI compat** | Nativo (`/v1/chat/completions`, `/v1/completions`, `/v1/models`) |
+| **Streaming** | Soportado (`"stream": true` en el payload) |
+| **Auth** | No requerida (proyecto académico de tesis — ver disclaimer abajo) |
+
+> ⚠️ **Disclaimer académico sobre la API pública**: el endpoint es público pero está destinado a uso académico para el proyecto de tesis (Universidad Manuela Beltrán). No use Mabel para diagnóstico clínico, atención de crisis sin supervisión profesional, ni despliegues comerciales sin auditoría psicológica previa. El presupuesto del endpoint es limitado ($30/mes free tier de Modal); abuso de tráfico puede agotarlo prematuramente.
+
+Documentación técnica completa del hosting (8 bugs encadenados durante la implementación, decisiones de arquitectura, métricas medidas): [`docs/29-hosting-modal.md`](https://github.com/ZyFalo/Gemma4-Mabel/blob/main/docs/29-hosting-modal.md).
+
+## Uso local (llama-cpp-python)
 
 ```bash
 pip install llama-cpp-python[server]

@@ -47,6 +47,7 @@ Estudiantes de la Universidad Manuela Beltrán, entre **20 y 26 años**, que par
 | [27-bitacora-entrenamiento.md](27-bitacora-entrenamiento.md) | **Bitácora del entrenamiento (§7-§9)**: intento local fallido, pivote a RunPod, 10 ajustes técnicos, training real, export GGUF, scorecard final |
 | **[28-model-card-hf.md](28-model-card-hf.md)** | **Espejo en GitHub del model card publicado en HuggingFace** (`ZyFalo/mabel-gemma4-e4b`). Fuente única de verdad — se sincroniza a HF con `scripts/sync_hf_readme.py` (Política Opción C, 2026-05-20) |
 | **[29-hosting-modal.md](29-hosting-modal.md)** | **§11 Hosting de Mabel en producción**: endpoint OpenAI-compat desplegado en Modal.com (`https://williamandres1603--mabel-api-serve.modal.run`). Documenta los 8 bugs encadenados resueltos durante la implementación con `llama-server` + GGUF + CUDA serverless. |
+| **[30-guia-integracion-api.md](30-guia-integracion-api.md)** | **§12 Guía de integración para consumidores de la API**: cómo conectar tu app (Python/Node/PHP/React+FastAPI/cURL) al endpoint de Mabel. Incluye el system prompt B+ literal, manejo de cold start, parámetros recomendados, streaming, health check, manejo de errores y checklist de integración. |
 | [decisiones/](decisiones/) | ADRs individuales para decisiones arquitectónicas mayores |
 
 ## Estado del proyecto — ✅ CERRADO v1 (2026-05-20)

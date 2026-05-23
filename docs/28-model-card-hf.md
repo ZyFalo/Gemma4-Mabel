@@ -210,6 +210,8 @@ curl https://williamandres1603--mabel-api-serve.modal.run/v1/chat/completions \
 
 Documentación técnica completa del hosting (8 bugs encadenados durante la implementación, decisiones de arquitectura, métricas medidas): [`docs/29-hosting-modal.md`](https://github.com/ZyFalo/Gemma4-Mabel/blob/main/docs/29-hosting-modal.md).
 
+📘 **Guía de integración paso a paso** (cómo conectar Python/Node/PHP/React+FastAPI/cURL al endpoint, con system prompt literal, manejo de cold start, streaming, health check y checklist accionable): [`docs/30-guia-integracion-api.md`](https://github.com/ZyFalo/Gemma4-Mabel/blob/main/docs/30-guia-integracion-api.md).
+
 ## Uso local (llama-cpp-python)
 
 ```bash

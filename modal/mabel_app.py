@@ -47,7 +47,13 @@ GGUF_URL = f"https://huggingface.co/{HF_REPO}/resolve/main/{GGUF_FILE}"
 
 image = (
     modal.Image.from_registry(
-        "ghcr.io/ggml-org/llama.cpp:server-cuda",
+        # Fijada por digest (decisión del PO del 2026-09-26): es la etiqueta
+        # `server-cuda-b9294`, el build que sirve hoy y con el que se midió todo.
+        # `server-cuda` a secas se mueve con cada build de llama.cpp, así que un
+        # redespliegue podía cambiar el binario sin que nadie lo decidiera.
+        # Digest leído de ghcr.io el 2026-10-17. Si Modal no aceptara el digest,
+        # usar "ghcr.io/ggml-org/llama.cpp:server-cuda-b9294".
+        "ghcr.io/ggml-org/llama.cpp@sha256:e8d36f4dc2a72a1df323748f6219c9dd11f662f7cb3b06a6b2916c9bf3866d89",
         add_python="3.11",  # imagen oficial llama.cpp no trae Python; Modal lo necesita
     )
     # La imagen oficial tiene ENTRYPOINT=/app/llama-server que intercepta TODOS
@@ -78,7 +84,12 @@ app = modal.App("mabel-api", image=image)
     min_containers=0,            # scale to zero cuando no hay tráfico
     max_containers=2,            # tope de seguridad
 )
-@modal.concurrent(max_inputs=10)  # hasta 10 requests simultáneos por container
+# 32 peticiones a la vez por contenedor (decisión del PO del 2026-10-17). Con 10,
+# la ráfaga de una clase abría un segundo contenedor EN FRÍO y esas peticiones
+# recibían 503 (medido el 2026-09-26, docs/CAPACIDAD_MODAL_2026-09-26.md de la
+# app). llama-server atiende 4 a la vez (4 ranuras); las demás esperan en su cola,
+# dentro del contenedor caliente.
+@modal.concurrent(max_inputs=32)
 @modal.web_server(port=PORT, startup_timeout=300)  # 5 min para que llama-server cargue el modelo a GPU
 def serve():
     """Levanta llama-server (C++ oficial de llama.cpp) con el GGUF cacheado en /models."""
@@ -97,6 +108,12 @@ def serve():
         "-ngl", "999",
         "--jinja",
         "--alias", "mabel-gemma4-e4b-Q4_K_M",
+        # Sin /slots (2026-10-17): el servidor responde sin clave (riesgo
+        # aceptado por el PO) y la app no usa esa ruta. En el build b9294,
+        # /slots no devuelve el texto de los prompts salvo con la variable
+        # LLAMA_SERVER_SLOTS_DEBUG, pero no hay por qué exponer ni el estado
+        # de cada ranura. /props y /v1/models siguen como estaban.
+        "--no-slots",
     ])
 
 
